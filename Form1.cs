@@ -22,61 +22,8 @@ namespace AutoMEK
 
         public DirectoryInfo di_pack = new DirectoryInfo(@".\Incoming");
         public DirectoryInfo di_packed = new DirectoryInfo(@".\Outgoing\");
-        class ZGLV
-        {
-            public string VERSION,  FILENAME, SD_Z, TEST, VER_PO;
-
-            private string _DATA;
-
-           
-            
-            public string DATA
-            { get
-                {
-                    return DATA.ToString();
-                }
-                set
-                {
-                    try
-                    {
-                        DATA = value;
-                    }
-                    catch
-                    {
-                        DATA = "!!!!!";
-                        //Здесь должно добавляться в протокол ошибок
-                    }
-                   
-                    
-                }
-            
-            }
-            
-
-
-
-
-            /* public ZGLV(string version, string data, string filename,string sd_z, string test, string ver_po)
-             {
-                 VERSION = version;
-                 DATA= data; 
-                 FILENAME= filename; 
-                 SD_Z = sd_z;  
-                 TEST = test;
-                 VER_PO = ver_po;
-             }
-            */
-            public override string ToString()
-            {
-                return FILENAME;
-            }
-
-            public void SetField(string name, string val)
-            {
-                var field = typeof(ZGLV).GetField(name);
-                field.SetValue(this, val);
-            }
-        }
+        public string FName;
+        public string FName1;
 
 
         public Form1()
@@ -118,30 +65,84 @@ namespace AutoMEK
             Goer(listBox1);
         }
 
-        private async void Goer(ListBox listBox)
+
+        public string Logger(string input ,  ListBox lb)
         {
-            int i = 0;
-            string str=null;
-            foreach (FileInfo findedFile in di_pack.GetFiles())
+            lb.Items.Add(input);
+            return  input + "\r\n";
+            
+        }
+
+
+
+        private  void Goer(ListBox listBox)
+        {
+            
+            string Logg;
+            foreach (FileInfo findedFile in di_pack.GetFiles("L*.xml"))
             {
                 XmlDocument xDoc = new XmlDocument();
                 xDoc.Load(findedFile.FullName);
 
+
                 XmlElement xRoot = xDoc.DocumentElement;
  
-
-        
-              
-
-
                 foreach (XmlNode xnode_1 in xRoot.SelectNodes("ZGLV"))
                 {
-                    ZGLV zerg = new ZGLV();
+                    bool succ = false;
+                    FileInfo st=null;
+                    FName1 = xnode_1["FILENAME1"].InnerText;
+
+
+                    try   ///ищем HM файл.
+                    {
+                        st = di_pack.GetFiles(FName1 + ".xml")[0];
+                        Logg =Logger ("Файл со случаями для файла " + FName1 + " найден!", listBox);
+                        succ = true;
+                    }
+                    catch
+                    {
+                        Logg = Logger("Файл со случаями для файла " + FName1 + " не найден!", listBox);
+                    }
+
+                    if (succ)  //Загружаем XML если нашли НМ файл
+                    {
+                        XmlDocument xDoc_HM = new XmlDocument();
+                        xDoc_HM.Load(st.FullName);
+                        XmlElement xRoot_HM = xDoc_HM.DocumentElement;
+                        foreach (XmlNode xnode_1_HM in xRoot_HM.SelectNodes("ZGLV"))
+                        {
+                            foreach (XmlNode xnode_2_HM in xnode_1_HM)
+                            {
+
+                                listBox.Items.Add(xnode_2_HM.Name + xnode_2_HM.InnerText);
+
+                                //    str=(xnode_1.Name + " -=- " + xnode_2.Name);
+                                //listBox.Items.Add(str);
+
+                            }
+
+
+
+                        }
+                        }
+
+
+
+
+
+
+
+
+
+
+
 
                     foreach (XmlNode xnode_2 in xnode_1)
                     {
-                       // listBox.Items.Add(xnode_2.Name + xnode_2.InnerText);
-                        zerg.SetField(xnode_2.Name.ToUpper(), xnode_2.InnerText);
+
+                       listBox.Items.Add(xnode_2.Name + xnode_2.InnerText);
+                     
                       //    str=(xnode_1.Name + " -=- " + xnode_2.Name);
                         //listBox.Items.Add(str);
                        
@@ -157,9 +158,8 @@ namespace AutoMEK
                         i++;
                     };*/
 
-                      listBox.Items.Add(zerg.FILENAME);
-                      listBox.Items.Add(zerg.DATA);
 
+                    MessageBox.Show(Logg);
                 }
                 
                 
