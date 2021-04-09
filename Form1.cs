@@ -135,36 +135,12 @@ namespace AutoMEK
 
                         foreach (XmlNode xnode_1_HM in xRoot_HM.SelectNodes("SCHET"))
                         {
-                        
-                              
-                               
-
-                                  if (mf003.FindIndex(s => s== xnode_1_HM["CODE_MO"].InnerText) <1)
-
-                                   {
-                                        Logg = Logger("001F.00.0030 ОШИБКА!", listBox);
-                                   }
-                                  
-                                
-                             
-
-                            
-
-
-
+                          if (mf003.FindIndex(s => s== xnode_1_HM["CODE_MO"].InnerText) <1)
+                          {
+                                        Logg = Logger("001F.00.0030  -  [CODE_MO] Организация "+ xnode_1_HM["CODE_MO"].InnerText + " не найдена в справочнике F003  ", listBox);
+                          }
                         }
                         }
-
-
-
-
-
-
-
-
-
-
-
 
                     foreach (XmlNode xnode_2 in xnode_1)
                     {
