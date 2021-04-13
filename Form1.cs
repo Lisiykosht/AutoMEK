@@ -6,12 +6,13 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Forms;
 using Npgsql;
 using System.Configuration;
 using System.Collections.Specialized;
 using System.IO;
-using System.Xml;
+using System.Xml.Linq;
 
 
 namespace AutoMEK
@@ -24,8 +25,9 @@ namespace AutoMEK
         public DirectoryInfo di_packed = new DirectoryInfo(@".\Outgoing\");
         public string FName;
         public string FName1;
-        public List<string> mf003;
-
+         List<Tuple<string , DateTime , DateTime >> mf003;
+         List<Tuple<string ,  DateTime >> mmkb;
+        public int N_ZAP;
         public Form1()
         {
             InitializeComponent();
@@ -57,17 +59,41 @@ namespace AutoMEK
 
             }
 
-            string query_1= "select code from foms.f003 where substring(code,1,2)='15' and coalesce(dateend,'2200-01-01')>'2021-01-01'";
+            string query_1= "select code, datebeg, coalesce(dateend,'2200-01-01') dateend from foms.f003 where substring(code,1,2)='15' and coalesce(dateend,'2200-01-01')>'2021-01-01'";
+            string query_2= "select code,  coalesce(date_end,'2200-01-01') date_end from foms.mkb where deleted=false";
             
             NpgsqlCommand cmd_1 = new NpgsqlCommand(query_1, npgSqlConnection_1);
+            NpgsqlCommand cmd_2 = new NpgsqlCommand(query_2, npgSqlConnection_1);
+
             NpgsqlDataReader f003 = cmd_1.ExecuteReader();
-            mf003 = new List<string>();
+           
+
+
+            mf003 = new List<Tuple<string, DateTime, DateTime>>();
+          
+
+
             if (f003.HasRows)
             {
                 while (f003.Read())
                 {
-                    
-                    mf003.Add(f003[0].ToString());
+                  
+
+                    mf003.Add(Tuple.Create( f003[0].ToString()  , Convert.ToDateTime(f003[1].ToString()) , Convert.ToDateTime(f003[2].ToString()) ));
+                }
+            }
+
+
+            f003.Close();
+            NpgsqlDataReader mkb = cmd_2.ExecuteReader();
+            mmkb = new List<Tuple<string, DateTime>>();
+            if (mkb.HasRows)
+            {
+                while (mkb.Read())
+                {
+                  
+
+                    mmkb.Add(Tuple.Create( mkb[0].ToString()  , Convert.ToDateTime(mkb[1].ToString())));
                 }
             }
 
@@ -84,36 +110,40 @@ namespace AutoMEK
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Goer(listBox1);
+            Thread myThread = new Thread(new ParameterizedThreadStart(Goer));
+            myThread.Start(listBox1);
         }
 
 
         public string Logger(string input ,  ListBox lb)
         {
-            lb.Items.Add(input);
-            return  input + "\r\n";
+            if (lb.InvokeRequired)
+            {
+                lb.Invoke(new Action(() => lb.Items.Add(DateTime.Now + " ---->" + input)));
+            }
+            return   input + "\r\n";
             
         }
 
 
 
-        private  void Goer(ListBox listBox)
+        public  void Goer(object olistBox)
         {
-            
+            ListBox listBox = (ListBox)olistBox;
             string Logg;
             foreach (FileInfo findedFile in di_pack.GetFiles("L*.xml"))
             {
-                XmlDocument xDoc = new XmlDocument();
-                xDoc.Load(findedFile.FullName);
+                XDocument xDoc =  XDocument.Load(findedFile.FullName);
 
 
-                XmlElement xRoot = xDoc.DocumentElement;
- 
-                foreach (XmlNode xnode_1 in xRoot.SelectNodes("ZGLV"))
+
+                XElement xRoot = xDoc.Element("ZL_LIST");
+                
+                foreach (XElement xnode_1 in xRoot.Elements("ZGLV"))
                 {
                     bool succ = false;
                     FileInfo st=null;
-                    FName1 = xnode_1["FILENAME1"].InnerText;
+                    FName1 = xnode_1.Element("FILENAME1").Value;
 
 
                     try   ///ищем HM файл.
@@ -129,29 +159,81 @@ namespace AutoMEK
 
                     if (succ)  //Загружаем XML если нашли НМ файл
                     {
-                        XmlDocument xDoc_HM = new XmlDocument();
-                        xDoc_HM.Load(st.FullName);
-                        XmlElement xRoot_HM = xDoc_HM.DocumentElement;
-
-                        foreach (XmlNode xnode_1_HM in xRoot_HM.SelectNodes("SCHET"))
+                        XDocument xDoc_HM =  XDocument.Load(st.FullName);
+                        XElement xRoot_HM = xDoc_HM.Element("ZL_LIST");
+                        
+                        foreach (XElement xnode_1_HM in xRoot_HM.Elements("SCHET"))
                         {
-                          if (mf003.FindIndex(s => s== xnode_1_HM["CODE_MO"].InnerText) <1)
-                          {
-                                        Logg = Logger("001F.00.0030  -  [CODE_MO] Организация "+ xnode_1_HM["CODE_MO"].InnerText + " не найдена в справочнике F003  ", listBox);
-                          }
+                             if (mf003.FindIndex(s => s.Item1== xnode_1_HM.Element("CODE_MO").Value &&  s.Item2 < Convert.ToDateTime(xnode_1_HM.Element("DSCHET").Value) &&  s.Item3 > Convert.ToDateTime(xnode_1_HM.Element("DSCHET").Value)) <1)
+                              {
+                                            Logg = Logger("001F.00.0030  -  [CODE_MO] Организация "+ xnode_1_HM.Element("CODE_MO").Value + " не найдена в справочнике F003  ", listBox);
+                              }
+                            
+                             //Logg = Logger(mf003[0].Item1+" - "+mf003[0].Item2 + " - " + mf003[0].Item3 , listBox);
+                            //listBox.Items.Add(xnode_1_HM["CODE_MO"].InnerText + " " + Convert.ToDateTime(xnode_1_HM["DSCHET"].InnerText));
+                            
                         }
+                        int xnode_1_HM_ZAP_row = 0;
+                        foreach (XElement xnode_1_HM_ZAP in xRoot_HM.Elements("ZAP"))
+                        {
+                            N_ZAP = 0;
+                            if (xnode_1_HM_ZAP.Element("N_ZAP") != null)
+                            {
+                                if (!Int32.TryParse(xnode_1_HM_ZAP.Element("N_ZAP").Value, out N_ZAP) | xnode_1_HM_ZAP.Element("N_ZAP").Value.Length > 9)
+                                {
+                                    Logg = Logger("004F.00.0190 - [N_ZAP] Поле N_ZAP  содержит недопустимое значение ["+ xnode_1_HM_ZAP.Element("N_ZAP").Value + "] в ZAP №  " + xnode_1_HM_ZAP_row, listBox);
+                                }
+
+                            }
+                            else 
+                            {
+                                Logg = Logger("003F.00.2110 - [N_ZAP] Пропущено обязательное поле N_ZAP в ZAP № " + xnode_1_HM_ZAP_row, listBox);
+                            };
+
+                            foreach (XElement xnode_1_HM_SLUCH in xnode_1_HM_ZAP.Elements("SLUCH"))
+                            {
+                                if (xnode_1_HM_SLUCH.Element("DS1").Value != null)
+                                {
+                                    
+                               if (mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS1").Value && s.Item2 >= Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value) ) < 1)
+                               {
+                                        Logg = Logger("005F.00.0040  - [DS1] Диагноз ["+ xnode_1_HM_SLUCH.Element("DS1").Value + "] не найден в справочнике MKB ", listBox);
+                               }
+                                    
+
+                                    if ((xnode_1_HM_SLUCH.Element("DS2")!= null)&&(xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS2").Value) || (xnode_1_HM_SLUCH.Element("DS3") != null) && (xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))
+                                    {
+                                        Logg = Logger("006F.00.0430  - N_ZAP "+N_ZAP+ " [DS1] Диагноз " + xnode_1_HM_SLUCH.Element("DS1").Value + " не должен равняться DS2 или DS3  ", listBox);
+
+                                    }
+
+                                   // if (xnode_1_HM_SLUCH["DS2"] != null) Logg = Logger("006F.00.0430  -  [DS2] есть  = "+ xnode_1_HM_SLUCH["DS2"].InnerText, listBox); ;
+
+                                }
+                                else
+                                {
+                                    Logg = Logger("003F.00.2451  - [DS1] Отсутствует обязательное поле DS1 ! ", listBox);
+                                }
+                               
+                               /* 
+                               */
+
+
+                            }
+
+
+
+
+
+                            xnode_1_HM_ZAP_row++;
                         }
+                    
+                        //xDoc_HM.Save(st.FullName);
+                        }
+                        
+                    
 
-                    foreach (XmlNode xnode_2 in xnode_1)
-                    {
-
-                     //  listBox.Items.Add(xnode_2.Name + xnode_2.InnerText);
-                     
-                      //    str=(xnode_1.Name + " -=- " + xnode_2.Name);
-                        //listBox.Items.Add(str);
-                       
-                    }
-
+                    
                     /*XmlNode attr = xnode.Attributes.GetNamedItem("Version");
                     if (attr != null)
                     { listBox1.Items.Add(attr.Value); } else 
@@ -165,10 +247,14 @@ namespace AutoMEK
 
                     //MessageBox.Show(Logg);
                 }
-                
-                
-            }
+                //xDoc.Save(findedFile.FullName);
 
+
+            }
+            long totalMemory = GC.GetTotalMemory(false);
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
     }
 }
