@@ -137,9 +137,11 @@ namespace AutoMEK
 
 
 
-                XElement xRoot = xDoc.Element("ZL_LIST");
-                
-                foreach (XElement xnode_1 in xRoot.Elements("ZGLV"))
+                XElement xRoot = xDoc.Element("PERS_LIST");
+
+              //  MessageBox.Show(xRoot.ToString());
+                   
+               foreach (XElement xnode_1 in xRoot.Elements("ZGLV"))
                 {
                     bool succ = false;
                     FileInfo st=null;
