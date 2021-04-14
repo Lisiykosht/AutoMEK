@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -13,6 +14,8 @@ using System.Configuration;
 using System.Collections.Specialized;
 using System.IO;
 using System.Xml.Linq;
+using System.Xml;
+
 
 
 namespace AutoMEK
@@ -163,8 +166,9 @@ namespace AutoMEK
 
                     if (succ)  //Загружаем XML если нашли НМ файл
                     {
-                        XDocument xDoc_HM =  XDocument.Load(st.FullName);
+                        XDocument xDoc_HM =  XDocument.Load(st.FullName, LoadOptions.SetLineInfo);
                         XElement xRoot_HM = xDoc_HM.Element("ZL_LIST");
+                      
                         
                         foreach (XElement xnode_1_HM in xRoot_HM.Elements("SCHET"))
                         {
@@ -178,6 +182,7 @@ namespace AutoMEK
                             
                         }
                         int xnode_1_HM_ZAP_row = 0;
+
                         foreach (XElement xnode_1_HM_ZAP in xRoot_HM.Elements("ZAP"))
                         {
                             N_ZAP = 0;
@@ -191,7 +196,8 @@ namespace AutoMEK
                             }
                             else 
                             {
-                                Logg = Logger("003F.00.2110 - [N_ZAP] Пропущено обязательное поле N_ZAP в ZAP № " + xnode_1_HM_ZAP_row, listBox);
+                                 
+                                Logg = Logger("003F.00.2110 - [N_ZAP] Пропущено обязательное поле N_ZAP в ZAP № " + xnode_1_HM_ZAP_row +" строка ("+ ((IXmlLineInfo)xnode_1_HM_ZAP).LineNumber + ")", listBox);
                             };
 
                             foreach (XElement xnode_1_HM_SLUCH in xnode_1_HM_ZAP.Elements("SLUCH"))
@@ -201,17 +207,36 @@ namespace AutoMEK
                                     
                                if (mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS1").Value && s.Item2 >= Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value) ) < 1)
                                {
-                                        Logg = Logger("005F.00.0040  - [DS1] Диагноз ["+ xnode_1_HM_SLUCH.Element("DS1").Value + "] не найден в справочнике MKB ", listBox);
+                                        Logg = Logger("005F.00.0040  - N_ZAP " + N_ZAP +"  [DS1] Диагноз ["+ xnode_1_HM_SLUCH.Element("DS1").Value + "] не найден в справочнике MKB-10", listBox);
                                }
-                                    
-
-                                    if ((xnode_1_HM_SLUCH.Element("DS2")!= null)&&(xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS2").Value) || (xnode_1_HM_SLUCH.Element("DS3") != null) && (xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))
+                                    if (xnode_1_HM_SLUCH.Element("DS2") != null)
                                     {
-                                        Logg = Logger("006F.00.0430  - N_ZAP "+N_ZAP+ " [DS1] Диагноз " + xnode_1_HM_SLUCH.Element("DS1").Value + " не должен равняться DS2 или DS3  ", listBox);
+                                        if ((xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS2").Value))// || (xnode_1_HM_SLUCH.Element("DS3") != null) && (xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))
+                                                                             Logg = Logger("006F.00.0430  - N_ZAP " + N_ZAP + " [DS1 -- DS2] Диагноз " + xnode_1_HM_SLUCH.Element("DS1").Value + " не должен равняться DS2", listBox);
+
+                                        if (mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS2").Value && s.Item2 >= Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value)) < 1)
+                                            Logg = Logger("005F.00.0050 - N_ZAP " + N_ZAP + " [DS2] Диагноз [" + xnode_1_HM_SLUCH.Element("DS2").Value + "] не найден в справочнике MKB-10", listBox);
+
+                                        if ((xnode_1_HM_SLUCH.Element("DS3") != null) && (xnode_1_HM_SLUCH.Element("DS2").Value == xnode_1_HM_SLUCH.Element("DS3").Value))// ||  (xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))
+                                            Logg = Logger("006F.00.0440  - N_ZAP " + N_ZAP + " [DS2 -- DS3] Диагноз " + xnode_1_HM_SLUCH.Element("DS2").Value + " не должен равняться DS3", listBox);
+
 
                                     }
 
-                                   // if (xnode_1_HM_SLUCH["DS2"] != null) Logg = Logger("006F.00.0430  -  [DS2] есть  = "+ xnode_1_HM_SLUCH["DS2"].InnerText, listBox); ;
+                                        
+
+
+                                    if (xnode_1_HM_SLUCH.Element("DS3") != null) 
+                                    {
+                                        if ((xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))// || (xnode_1_HM_SLUCH.Element("DS3") != null) && (xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))
+                                            Logg = Logger("006F.00.0430  - N_ZAP " + N_ZAP + " [DS1 -- DS3] Диагноз " + xnode_1_HM_SLUCH.Element("DS1").Value + " не должен равняться DS3", listBox);
+
+                                        if (mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS3").Value && s.Item2 >= Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value)) < 1)
+                                            Logg = Logger("005F.00.0060 - N_ZAP " + N_ZAP + " [DS3] Диагноз [" + xnode_1_HM_SLUCH.Element("DS3").Value + "] не найден в справочнике MKB-10", listBox);
+
+                                       
+                                    }
+                                    // if (xnode_1_HM_SLUCH["DS2"] != null) Logg = Logger("006F.00.0430  -  [DS2] есть  = "+ xnode_1_HM_SLUCH["DS2"].InnerText, listBox); ;
 
                                 }
                                 else
