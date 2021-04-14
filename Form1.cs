@@ -25,6 +25,7 @@ namespace AutoMEK
         public DirectoryInfo di_packed = new DirectoryInfo(@".\Outgoing\");
         public string FName;
         public string FName1;
+        public int ThreadCount;
          List<Tuple<string , DateTime , DateTime >> mf003;
          List<Tuple<string ,  DateTime >> mmkb;
         public int N_ZAP;
@@ -130,6 +131,7 @@ namespace AutoMEK
         public  void Goer(object olistBox)
         {
             ListBox listBox = (ListBox)olistBox;
+            ThreadCount++;
             string Logg;
             foreach (FileInfo findedFile in di_pack.GetFiles("L*.xml"))
             {
@@ -253,10 +255,20 @@ namespace AutoMEK
 
 
             }
+            Logg = Logger("Обработка файла " + FName1 + " завершена!", listBox);
+
             long totalMemory = GC.GetTotalMemory(false);
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
+            ThreadCount--;
+
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            toolStripStatusLabel1.Text= ThreadCount.ToString();
+
         }
     }
 }
