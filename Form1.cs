@@ -30,6 +30,7 @@ namespace AutoMEK
         public string FName1;
         public int ThreadCount;
          List<Tuple<string , DateTime , DateTime >> mf003;
+         List<Tuple<int,double,DateTime , DateTime >> mkslp;
          List<Tuple<string ,  DateTime >> mmkb;
         public int N_ZAP;
         public Form1()
@@ -42,16 +43,16 @@ namespace AutoMEK
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            String connectionString = "Server=192.168.2.157;Port=5432;Username=postgresql;Password=sa1512;Database=pg_misc;";
+            /*String connectionString = "Server=192.168.2.157;Port=5432;Username=postgresql;Password=sa1512;Database=pg_misc;";
             NpgsqlConnection npgSqlConnection= new NpgsqlConnection(connectionString);
-            
+            */
             String connectionString_1 = "Server=192.168.2.155;Port=5432;Username=fuser;Password=6PJyRMLH#Sf@tQLL9Sc@; Database =foms;";
             NpgsqlConnection npgSqlConnection_1= new NpgsqlConnection(connectionString_1);
 
 
 
             try
-            { npgSqlConnection.Open(); 
+            {// npgSqlConnection.Open(); 
              npgSqlConnection_1.Open(); }
             catch
             {
@@ -65,43 +66,50 @@ namespace AutoMEK
 
             string query_1= "select code, datebeg, coalesce(dateend,'2200-01-01') dateend from foms.f003 where substring(code,1,2)='15' and coalesce(dateend,'2200-01-01')>'2021-01-01'";
             string query_2= "select code,  coalesce(date_end,'2200-01-01') date_end from foms.mkb where deleted=false";
+            string query_3= "select idsl,zkoef,datebeg,  coalesce(datebeg,'2021-01-01') date_end from public.k_kslp";
             
             NpgsqlCommand cmd_1 = new NpgsqlCommand(query_1, npgSqlConnection_1);
             NpgsqlCommand cmd_2 = new NpgsqlCommand(query_2, npgSqlConnection_1);
+            NpgsqlCommand cmd_3 = new NpgsqlCommand(query_3, npgSqlConnection_1);
 
             NpgsqlDataReader f003 = cmd_1.ExecuteReader();
+            
            
 
-
             mf003 = new List<Tuple<string, DateTime, DateTime>>();
-          
-
+            mkslp = new List<Tuple<int, double, DateTime, DateTime>>();
+            mmkb = new List<Tuple<string, DateTime>>();
+            
 
             if (f003.HasRows)
             {
                 while (f003.Read())
                 {
-                  
-
                     mf003.Add(Tuple.Create( f003[0].ToString()  , Convert.ToDateTime(f003[1].ToString()) , Convert.ToDateTime(f003[2].ToString()) ));
                 }
             }
-
-
             f003.Close();
+
+
             NpgsqlDataReader mkb = cmd_2.ExecuteReader();
-            mmkb = new List<Tuple<string, DateTime>>();
+
             if (mkb.HasRows)
             {
                 while (mkb.Read())
                 {
-                  
-
-                    mmkb.Add(Tuple.Create( mkb[0].ToString()  , Convert.ToDateTime(mkb[1].ToString())));
+                  mmkb.Add(Tuple.Create( mkb[0].ToString()  ,mkb.GetDateTime(1)));
                 }
             }
+            mkb.Close();
+            NpgsqlDataReader kslp = cmd_3.ExecuteReader();
 
-          
+            if (kslp.HasRows)
+            {
+                while (kslp.Read())
+                {
+                    mkslp.Add(Tuple.Create(kslp.GetInt32(0), kslp.GetDouble(1), kslp.GetDateTime(2),kslp.GetDateTime(3)));
+                }
+            }
 
 
             if (!di_pack.Exists)
@@ -236,6 +244,39 @@ namespace AutoMEK
 
                                        
                                     }
+
+
+                                    if (xnode_1_HM_SLUCH.Element("IT_SL") != null)
+                                    {
+                                        if(double.TryParse(xnode_1_HM_SLUCH.Element("IT_SL").Value, out double II)|| xnode_1_HM_ZAP.Element("IT_SL").Value.Length != 7)
+                                            Logg = Logger("003F.00.1150 - N_ZAP " + N_ZAP + " [IT_SL] элемент должен соответствовать маске 9.99999", listBox);
+
+                                        /*if (mkslp.FindIndex(s => s.Item1 == Convert.ToInt32(xnode_1_HM_SLUCH.Element("IT_SL").Value) && s.Item3 < Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value) && s.Item4 >= Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value)) < 1)
+                                            Logg = Logger("005F.00.0050 - N_ZAP " + N_ZAP + " [IT_SL] Диагноз [" + xnode_1_HM_SLUCH.Element("DS2").Value + "] не найден в справочнике MKB-10", listBox);
+                                        */
+
+                                        if (double.TryParse(xnode_1_HM_SLUCH.Element("IT_SL").Value, out double Ix) && Ix == 1.0f)
+                                        {
+                                            Logg = Logger("003F.00.1150 - N_ZAP " + N_ZAP + " [IT_SL] элемент должен отсутствовать при отсутствии поля SL_KOEF", listBox);
+                                            Logg = Logger("003F.00.1160 - N_ZAP " + N_ZAP + " [SL_KOEF] элемент должен присутствовать при наличии поля IT_SL", listBox);
+                                        }
+                                        if (xnode_1_HM_SLUCH.Element("SL_KOEF") == null)
+                                            Logg = Logger("006F.00.1350 - N_ZAP " + N_ZAP + " [IT_SL] элемент не может принимать значение 1 в 2021 году!", listBox);
+
+
+
+
+
+                                    }
+                                    else
+                                    {
+                                        if (xnode_1_HM_SLUCH.Element("SL_KOEF") != null)
+                                        {
+                                            Logg = Logger("003F.00.1140 - N_ZAP " + N_ZAP + " [IT_SL] элемент должен присутствовать при наличии поля SL_KOEF", listBox);
+                                            Logg = Logger("003F.00.1170 - N_ZAP " + N_ZAP + " [SL_KOEF] элемент должен отсутствовать при отсутствии поля IT_SL", listBox);
+                                        }
+                                    }
+
                                     // if (xnode_1_HM_SLUCH["DS2"] != null) Logg = Logger("006F.00.0430  -  [DS2] есть  = "+ xnode_1_HM_SLUCH["DS2"].InnerText, listBox); ;
 
                                 }
