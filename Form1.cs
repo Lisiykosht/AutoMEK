@@ -66,7 +66,7 @@ namespace AutoMEK
 
             string query_1= "select code, datebeg, coalesce(dateend,'2200-01-01') dateend from foms.f003 where substring(code,1,2)='15' and coalesce(dateend,'2200-01-01')>'2021-01-01'";
             string query_2= "select code,  coalesce(date_end,'2200-01-01') date_end from foms.mkb where deleted=false";
-            string query_3= "select idsl,zkoef,datebeg,  coalesce(datebeg,'2021-01-01') date_end from public.k_kslp";
+            string query_3= "select idsl,zkoef,datebeg,  coalesce(dateend,'2221-01-01') date_end from public.k_kslp";
             
             NpgsqlCommand cmd_1 = new NpgsqlCommand(query_1, npgSqlConnection_1);
             NpgsqlCommand cmd_2 = new NpgsqlCommand(query_2, npgSqlConnection_1);
@@ -273,25 +273,51 @@ namespace AutoMEK
                                             }
                                             else
                                             {
-                                                //MessageBox.Show(Int32.TryParse(xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value, out int x) + "    " + xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value.Length);
                                                 
                                                 if (!Int32.TryParse(xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value, out int xx) || xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value.Length > 4)
                                                 { Logg = Logger("004F.00.1180 - N_ZAP " + N_ZAP + " [SL_KOEF/IDSL] элемент должен соответствовать маске 9999", listBox); }
                                                 else {
 
-                                                    if (mkslp.FindIndex(s => s.Item1 == xx && s.Item2 !=null&& s.Item3 < Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value) && s.Item4 >= Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value)) < 1)
+                                                    if (mkslp.FindIndex(s => s.Item1 == xx && s.Item3 < Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value) && s.Item4 >= Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value)) < 1)
+                                                    {
                                                         Logg = Logger("005F.00.0160 - N_ZAP " + N_ZAP + " [SL_KOEF/IDSL] КСЛП  [" + xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value + "] не найден в справочнике КСЛП", listBox);
+                                                        
+                                                        
+
+                                                    }
+                                                    if (xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("Z_SL") == null)
+                                                    {
+                                                        Logg = Logger("003F.00.2780 - N_ZAP " + N_ZAP + " [SL_KOEF/Z_SL] элемент должен присутствовать при наличии поля SL_KOEF", listBox);
+                                                    }
+                                                    else
+                                                    {
+                                                        if (!double.TryParse(xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("Z_SL").Value.ToString().Replace(".",","), out double ikslp) )//|| xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("Z_SL").Value.Length < 4)
+                                                        {
+                                                            Logg = Logger("004F.00.1190 - N_ZAP " + N_ZAP + " [SL_KOEF/Z_SL] значение КСЛП  [" +ikslp+" )( "+ xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("Z_SL").Value + "] элемент должен соответствовать маске 9.99999", listBox);
+                                                        }
+                                                        else
+                                                        {
+                                                           
+                                                            if (mkslp.FindIndex(s => s.Item1 == Convert.ToInt32(xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value) && s.Item2 == ikslp && s.Item3 < Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value) && s.Item4 >= Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value)) < 1)
+                                                            {
+                                                                
+                                                                Logg = Logger("004F.00.1190 - N_ZAP " + N_ZAP + " [SL_KOEF/Z_SL] КСЛП  номер [" + xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value +"--"+xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("Z_SL").Value + "] не найден в справочнике КСЛП", listBox);
+                                                            }
+                                                            else
+                                                            {
+
+                                                            }
+                                                        }
+                                                            
+
+
+                                                    }
+
+
+
                                                 }
 
-
-                                            }
-
-                                            if (xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("Z_SL") == null)
-                                            {
-                                                Logg = Logger("003F.00.2780 - N_ZAP " + N_ZAP + " [SL_KOEF/Z_SL] элемент должен присутствовать при наличии поля SL_KOEF", listBox);
-                                            }
-                                            else
-                                            {
+                                            
 
                                             }
                                         }
@@ -319,8 +345,10 @@ namespace AutoMEK
                                     Logg = Logger("003F.00.2451  - [DS1] Отсутствует обязательное поле DS1 ! ", listBox);
                                 }
                                
-                               /* 
-                               */
+                              if (xnode_1_HM_SLUCH.Element("TARIF").Value != null)
+                                {
+                                    if (xnode_1_HM_SLUCH.Element("TARIF").Value != null)
+                                }
 
 
                             }
