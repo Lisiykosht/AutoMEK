@@ -31,6 +31,7 @@ namespace AutoMEK
         public int ThreadCount;
          List<Tuple<string , DateTime , DateTime >> mf003;
          List<Tuple<int,double,DateTime , DateTime >> mkslp;
+        public List<Tuple<string, string,DateTime , DateTime >> mV024;
          List<Tuple<string ,  DateTime >> mmkb;
         public int N_ZAP;
         public Form1()
@@ -67,10 +68,12 @@ namespace AutoMEK
             string query_1= "select code, datebeg, coalesce(dateend,'2200-01-01') dateend from foms.f003 where substring(code,1,2)='15' and coalesce(dateend,'2200-01-01')>'2021-01-01'";
             string query_2= "select code,  coalesce(date_end,'2200-01-01') date_end from foms.mkb where deleted=false";
             string query_3= "select idsl,zkoef,datebeg,  coalesce(dateend,'2221-01-01') date_end from public.k_kslp";
+            string query_4= "select iddkk,dkkname,datebeg,  coalesce(dateend,'2221-01-01') date_end from foms.v024";
             
             NpgsqlCommand cmd_1 = new NpgsqlCommand(query_1, npgSqlConnection_1);
             NpgsqlCommand cmd_2 = new NpgsqlCommand(query_2, npgSqlConnection_1);
             NpgsqlCommand cmd_3 = new NpgsqlCommand(query_3, npgSqlConnection_1);
+            NpgsqlCommand cmd_4 = new NpgsqlCommand(query_4, npgSqlConnection_1);
 
             NpgsqlDataReader f003 = cmd_1.ExecuteReader();
             
@@ -79,6 +82,7 @@ namespace AutoMEK
             mf003 = new List<Tuple<string, DateTime, DateTime>>();
             mkslp = new List<Tuple<int, double, DateTime, DateTime>>();
             mmkb = new List<Tuple<string, DateTime>>();
+            mV024 = new List<Tuple<string,string, DateTime, DateTime>>();
             
 
             if (f003.HasRows)
@@ -108,6 +112,18 @@ namespace AutoMEK
                 while (kslp.Read())
                 {
                     mkslp.Add(Tuple.Create(kslp.GetInt32(0), kslp.GetDouble(1), kslp.GetDateTime(2),kslp.GetDateTime(3)));
+                }
+            }
+            kslp.Close();
+
+
+            NpgsqlDataReader V024 = cmd_4.ExecuteReader();
+            if (V024.HasRows)
+            {
+                while (kslp.Read())
+                {
+                    
+                    mV024.Add(Tuple.Create(V024[0].ToString(), V024[1].ToString(), V024.GetDateTime(2), V024.GetDateTime(3)));
                 }
             }
 
@@ -172,7 +188,7 @@ namespace AutoMEK
                     }
                     catch
                     {
-                        Logg = Logger("Файл" + FName1 + "  со случаями для файла " + FName1 + " не найден!", listBox);
+                        Logg = Logger("Файл" + FName1 + "  со случаями для файла " + findedFile.Name + " не найден!", listBox);
                     }
 
                     if (succ)  //Загружаем XML если нашли НМ файл
@@ -183,11 +199,22 @@ namespace AutoMEK
                         
                         foreach (XElement xnode_1_HM in xRoot_HM.Elements("SCHET"))
                         {
-                             if (mf003.FindIndex(s => s.Item1== xnode_1_HM.Element("CODE_MO").Value &&  s.Item2 < Convert.ToDateTime(xnode_1_HM.Element("DSCHET").Value) &&  s.Item3 > Convert.ToDateTime(xnode_1_HM.Element("DSCHET").Value)) <1)
-                              {
-                                            Logg = Logger("001F.00.0030  -  [CODE_MO] Организация "+ xnode_1_HM.Element("CODE_MO").Value + " не найдена в справочнике F003  ", listBox);
-                              }
-                            
+                            if (!DateTime.TryParse(xnode_1_HM.Element("DSCHET").Value, out DateTime DSCHET))
+                            {
+                                Logg = Logger("003F.00.2070  -  [DSCHET] Ошибка обработки файла  " + FName1+ "! Поле DSCHET является обязатльным для заполнения! DSCHET принят как "+DateTime.Now+"!", listBox);
+                                return;
+
+                            }
+                            else
+                            {
+                                DSCHET = DateTime.Now;
+                            }
+                            {
+                                if (mf003.FindIndex(s => s.Item1 == xnode_1_HM.Element("CODE_MO").Value && s.Item2 < DSCHET && s.Item3 > Convert.ToDateTime(xnode_1_HM.Element("DSCHET").Value)) < 1)
+                                        { 
+                                            Logg = Logger("001F.00.0030  -  [CODE_MO] Организация " + xnode_1_HM.Element("CODE_MO").Value + " не найдена в справочнике F003  ", listBox);
+                                        }
+                            }
                              //Logg = Logger(mf003[0].Item1+" - "+mf003[0].Item2 + " - " + mf003[0].Item3 , listBox);
                             //listBox.Items.Add(xnode_1_HM["CODE_MO"].InnerText + " " + Convert.ToDateTime(xnode_1_HM["DSCHET"].InnerText));
                             
@@ -201,7 +228,7 @@ namespace AutoMEK
                             {
                                 if (!Int32.TryParse(xnode_1_HM_ZAP.Element("N_ZAP").Value, out N_ZAP) | xnode_1_HM_ZAP.Element("N_ZAP").Value.Length > 9)
                                 {
-                                    Logg = Logger("004F.00.0190 - [N_ZAP] Поле N_ZAP  содержит недопустимое значение ["+ xnode_1_HM_ZAP.Element("N_ZAP").Value + "] в ZAP №  " + xnode_1_HM_ZAP_row, listBox);
+                                    Logg = Logger("004F.00.0190 - [N_ZAP] Поле N_ZAP  содержит недопустимое значение ["+ xnode_1_HM_ZAP.Element("N_ZAP").Value + "] в ZAP №  " + xnode_1_HM_ZAP_row + " строка (" + ((IXmlLineInfo)xnode_1_HM_ZAP).LineNumber + ")", listBox);
                                 }
 
                             }
@@ -342,14 +369,65 @@ namespace AutoMEK
                                 }
                                 else
                                 {
-                                    Logg = Logger("003F.00.2451  - [DS1] Отсутствует обязательное поле DS1 ! ", listBox);
-                                }
-                               
-                              if (xnode_1_HM_SLUCH.Element("TARIF").Value != null)
-                                {
-                                    if (xnode_1_HM_SLUCH.Element("TARIF").Value != null)
+                                    Logg = Logger("003F.00.2451  - N_ZAP " + N_ZAP + " [DS1] Отсутствует обязательное поле DS1 ! ", listBox);
                                 }
 
+                                /* if (xnode_1_HM_SLUCH.Element("TARIF").Value != null)
+                                   {
+                                       if (xnode_1_HM_SLUCH.Element("TARIF").Value != null) 
+                                   }
+                                */
+
+
+
+                                //Блок ONK_SL
+
+                                if (xnode_1_HM_SLUCH.Element("ONK_SL") != null)
+                                {
+                                    if (xnode_1_HM_SLUCH.Element("ONK_SL").Element("ONK_USL") != null) 
+
+                                    {
+                                        foreach (XElement xnode_1_ONK_USL in xnode_1_HM_SLUCH.Element("ONK_SL").Elements("ONK_USL")) 
+                                        {
+                                            if (xnode_1_ONK_USL.Element("USL_TIP") != null)
+                                            {
+                                                int val = Int16.Parse(xnode_1_ONK_USL.Element("USL_TIP").Value);
+
+
+                                                if (xnode_1_ONK_USL.Element("LEK_PR")!=null)
+                                                {
+                                                    if (val == 2 ^ val == 4)
+                                                    {
+
+                                                    }
+                                                    else
+                                                    {
+                                                        Logg = Logger("003F.00.1500  - N_ZAP " + N_ZAP + " [LEK_PR] элемент должен отсутствовать при USL_TIP<>{2,4}! ", listBox);
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    if (val == 2 ^ val == 4)
+                                                    {
+                                                        Logg = Logger("003F.00.1490  - N_ZAP " + N_ZAP + " [LEK_PR] элемент должен присутствовать при USL_TIP={2,4}! ", listBox);
+                                                    }
+                                                    else
+                                                    {
+                                                        
+                                                    }
+                                                }
+
+                                               
+                                            }
+                                            else
+                                            {
+
+                                            }
+                                        }
+                                        
+                                    }
+                                    
+                                }
 
                             }
 
