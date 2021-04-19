@@ -34,6 +34,8 @@ namespace AutoMEK
         public List<Tuple<string, string,DateTime , DateTime >> mV024;
          List<Tuple<string ,  DateTime >> mmkb;
         public int N_ZAP;
+        public DateTime DATE_1;
+        public DateTime DATE_2;
         public Form1()
         {
             InitializeComponent();
@@ -202,7 +204,7 @@ namespace AutoMEK
                             if (!DateTime.TryParse(xnode_1_HM.Element("DSCHET").Value, out DateTime DSCHET))
                             {
                                 Logg = Logger("003F.00.2070  -  [DSCHET] Ошибка обработки файла  " + FName1+ "! Поле DSCHET является обязатльным для заполнения! DSCHET принят как "+DateTime.Now+"!", listBox);
-                                return;
+                                
 
                             }
                             else
@@ -242,8 +244,9 @@ namespace AutoMEK
                             {
                                 if (xnode_1_HM_SLUCH.Element("DS1").Value != null)
                                 {
-                                    
-                               if (mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS1").Value && s.Item2 >= Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value) ) < 1)
+                                    DATE_2 = Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value);
+                                    DATE_1 = Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_1").Value);
+                               if (mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS1").Value && s.Item2 >= DATE_2 ) < 1)
                                {
                                         Logg = Logger("005F.00.0040  - N_ZAP " + N_ZAP +"  [DS1] Диагноз ["+ xnode_1_HM_SLUCH.Element("DS1").Value + "] не найден в справочнике MKB-10", listBox);
                                }
@@ -252,7 +255,7 @@ namespace AutoMEK
                                         if ((xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS2").Value))// || (xnode_1_HM_SLUCH.Element("DS3") != null) && (xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))
                                                                              Logg = Logger("006F.00.0430  - N_ZAP " + N_ZAP + " [DS1 -- DS2] Диагноз " + xnode_1_HM_SLUCH.Element("DS1").Value + " не должен равняться DS2", listBox);
 
-                                        if (mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS2").Value && s.Item2 >= Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value)) < 1)
+                                        if (mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS2").Value && s.Item2 >= DATE_2) < 1)
                                             Logg = Logger("005F.00.0050 - N_ZAP " + N_ZAP + " [DS2] Диагноз [" + xnode_1_HM_SLUCH.Element("DS2").Value + "] не найден в справочнике MKB-10", listBox);
 
                                         if ((xnode_1_HM_SLUCH.Element("DS3") != null) && (xnode_1_HM_SLUCH.Element("DS2").Value == xnode_1_HM_SLUCH.Element("DS3").Value))// ||  (xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))
@@ -269,7 +272,7 @@ namespace AutoMEK
                                         if ((xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))// || (xnode_1_HM_SLUCH.Element("DS3") != null) && (xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))
                                             Logg = Logger("006F.00.0430  - N_ZAP " + N_ZAP + " [DS1 -- DS3] Диагноз " + xnode_1_HM_SLUCH.Element("DS1").Value + " не должен равняться DS3", listBox);
 
-                                        if (mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS3").Value && s.Item2 >= Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value)) < 1)
+                                        if (mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS3").Value && s.Item2 >= DATE_2) < 1)
                                             Logg = Logger("005F.00.0060 - N_ZAP " + N_ZAP + " [DS3] Диагноз [" + xnode_1_HM_SLUCH.Element("DS3").Value + "] не найден в справочнике MKB-10", listBox);
 
                                        
@@ -305,7 +308,7 @@ namespace AutoMEK
                                                 { Logg = Logger("004F.00.1180 - N_ZAP " + N_ZAP + " [SL_KOEF/IDSL] элемент должен соответствовать маске 9999", listBox); }
                                                 else {
 
-                                                    if (mkslp.FindIndex(s => s.Item1 == xx && s.Item3 < Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value) && s.Item4 >= Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value)) < 1)
+                                                    if (mkslp.FindIndex(s => s.Item1 == xx && s.Item3 < DATE_2 && s.Item4 >= DATE_2) < 1)
                                                     {
                                                         Logg = Logger("005F.00.0160 - N_ZAP " + N_ZAP + " [SL_KOEF/IDSL] КСЛП  [" + xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value + "] не найден в справочнике КСЛП", listBox);
                                                         
@@ -325,7 +328,7 @@ namespace AutoMEK
                                                         else
                                                         {
                                                            
-                                                            if (mkslp.FindIndex(s => s.Item1 == Convert.ToInt32(xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value) && s.Item2 == ikslp && s.Item3 < Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value) && s.Item4 >= Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value)) < 1)
+                                                            if (mkslp.FindIndex(s => s.Item1 == Convert.ToInt32(xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value) && s.Item2 == ikslp && s.Item3 < DATE_2 && s.Item4 >= DATE_2) < 1)
                                                             {
                                                                 
                                                                 Logg = Logger("004F.00.1190 - N_ZAP " + N_ZAP + " [SL_KOEF/Z_SL] КСЛП  номер [" + xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value +"--"+xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("Z_SL").Value + "] не найден в справочнике КСЛП", listBox);
@@ -396,28 +399,52 @@ namespace AutoMEK
 
                                                 if (xnode_1_ONK_USL.Element("LEK_PR")!=null)
                                                 {
-                                                    if (val == 2 ^ val == 4)
-                                                    {
+                                                    if (!(val == 2 ^ val == 4))
+                                                        Logg = Logger("003F.00.1500  - N_ZAP " + N_ZAP + " [LEK_PR] элемент должен отсутствовать при USL_TIP<>{2,4}! ", listBox);
+                                                  
+                                                    if (xnode_1_ONK_USL.Element("LEK_PR").Element("REGNUM")==null)
+                                                        Logg = Logger("003F.00.2660  - N_ZAP " + N_ZAP + " [REGNUM] элемент должен присутствовать при наличии LEK_PR! ", listBox);
 
+                                                    if (xnode_1_ONK_USL.Element("LEK_PR").Element("CODE_SH") == null)
+                                                    {
+                                                        Logg = Logger("003F.00.2670  - N_ZAP " + N_ZAP + " [CODE_SH] элемент должен присутствовать при наличии LEK_PR! ", listBox);
                                                     }
                                                     else
                                                     {
-                                                        Logg = Logger("003F.00.1500  - N_ZAP " + N_ZAP + " [LEK_PR] элемент должен отсутствовать при USL_TIP<>{2,4}! ", listBox);
+
                                                     }
+                                                        
+
+                                                    if (xnode_1_ONK_USL.Element("LEK_PR").Element("DATE_INJ") == null)
+                                                    {
+                                                        Logg = Logger("003F.00.2680  - N_ZAP " + N_ZAP + " [DATE_INJ] элемент должен присутствовать при наличии LEK_PR! ", listBox);
+                                                    }
+                                                    else
+                                                    {
+                                                        if (!DateTime.TryParse(xnode_1_ONK_USL.Element("LEK_PR").Element("DATE_INJ").Value,out DateTime DATE_INJ))
+                                                            {
+                                                            Logg = Logger("004F.00.1540  - N_ZAP " + N_ZAP + " [DATE_INJ] элемент должен содержать корректную дату! ", listBox);
+                                                            }  
+                                                        if (DATE_INJ< DATE_1)
+                                                            Logg = Logger("006F.00.0610  - N_ZAP " + N_ZAP + " [DATE_INJ] Должен быть больше или равен DATE_1! ", listBox);
+                                                        if (DATE_INJ> DATE_2)
+                                                            Logg = Logger("006F.00.0620  - N_ZAP " + N_ZAP + " [DATE_INJ] Должен быть меньше или равен DATE_2! ", listBox);
+
+
+                                                    }
+                                                        
+
+
+
                                                 }
                                                 else
                                                 {
-                                                    if (val == 2 ^ val == 4)
-                                                    {
+                                                    if ((val == 2 ^ val == 4))
                                                         Logg = Logger("003F.00.1490  - N_ZAP " + N_ZAP + " [LEK_PR] элемент должен присутствовать при USL_TIP={2,4}! ", listBox);
-                                                    }
-                                                    else
-                                                    {
-                                                        
-                                                    }
+
                                                 }
 
-                                               
+
                                             }
                                             else
                                             {
