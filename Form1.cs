@@ -24,18 +24,36 @@ namespace AutoMEK
     public partial class Form1 : Form
     {
 
-        public DirectoryInfo di_pack = new DirectoryInfo(@".\Incoming");
-        public DirectoryInfo di_packed = new DirectoryInfo(@".\Outgoing\");
-        public string FName;
-        public string FName1;
-        public int ThreadCount;
-         List<Tuple<string , DateTime , DateTime >> mf003;
+        private DirectoryInfo di_pack = new DirectoryInfo(@".\Incoming");
+        private DirectoryInfo di_packed = new DirectoryInfo(@".\Outgoing\");
+        private string fName;
+        private string fName1;
+        private int threadCount;
+        List<Tuple<string , DateTime , DateTime >> mf003;
          List<Tuple<int,double,DateTime , DateTime >> mkslp;
-        public List<Tuple<string, string,DateTime , DateTime >> mV024;
-         List<Tuple<string ,  DateTime >> mmkb;
-        public int N_ZAP;
-        public DateTime DATE_1;
-        public DateTime DATE_2;
+        private List<Tuple<string, string, DateTime, DateTime>> mV024;
+        private List<Tuple<string, string, DateTime, DateTime>> mPERS;
+        List<Tuple<string ,  DateTime >> mmkb;
+        private int n_ZAP;
+        private DateTime dATE_1;
+        private DateTime dATE_2;
+        private string USL_OK;
+        private string FOR_POM;
+
+        public DirectoryInfo Di_pack { get => di_pack; set => di_pack = value; }
+        public DirectoryInfo Di_packed { get => di_packed; set => di_packed = value; }
+        public string FName { get => fName; set => fName = value; }
+        public string FName1 { get => fName1; set => fName1 = value; }
+        public int ThreadCount { get => threadCount; set => threadCount = value; }
+        public List<Tuple<string, DateTime, DateTime>> Mf003 { get => mf003; set => mf003 = value; }
+        public List<Tuple<int, double, DateTime, DateTime>> Mkslp { get => mkslp; set => mkslp = value; }
+        public List<Tuple<string, string, DateTime, DateTime>> MV024 { get => mV024; set => mV024 = value; }
+        public List<Tuple<string, string, DateTime, DateTime>> MPERS { get => mPERS; set => mPERS = value; }
+        public List<Tuple<string, DateTime>> Mmkb { get => mmkb; set => mmkb = value; }
+        public int N_ZAP { get => n_ZAP; set => n_ZAP = value; }
+        public DateTime DATE_1 { get => dATE_1; set => dATE_1 = value; }
+        public DateTime DATE_2 { get => dATE_2; set => dATE_2 = value; }
+
         public Form1()
         {
             InitializeComponent();
@@ -81,17 +99,17 @@ namespace AutoMEK
             
            
 
-            mf003 = new List<Tuple<string, DateTime, DateTime>>();
-            mkslp = new List<Tuple<int, double, DateTime, DateTime>>();
-            mmkb = new List<Tuple<string, DateTime>>();
-            mV024 = new List<Tuple<string,string, DateTime, DateTime>>();
+            Mf003 = new List<Tuple<string, DateTime, DateTime>>();
+            Mkslp = new List<Tuple<int, double, DateTime, DateTime>>();
+            Mmkb = new List<Tuple<string, DateTime>>();
+            MV024 = new List<Tuple<string,string, DateTime, DateTime>>();
             
 
             if (f003.HasRows)
             {
                 while (f003.Read())
                 {
-                    mf003.Add(Tuple.Create( f003[0].ToString()  , Convert.ToDateTime(f003[1].ToString()) , Convert.ToDateTime(f003[2].ToString()) ));
+                    Mf003.Add(Tuple.Create( f003[0].ToString()  , Convert.ToDateTime(f003[1].ToString()) , Convert.ToDateTime(f003[2].ToString()) ));
                 }
             }
             f003.Close();
@@ -103,7 +121,7 @@ namespace AutoMEK
             {
                 while (mkb.Read())
                 {
-                  mmkb.Add(Tuple.Create( mkb[0].ToString()  ,mkb.GetDateTime(1)));
+                  Mmkb.Add(Tuple.Create( mkb[0].ToString()  ,mkb.GetDateTime(1)));
                 }
             }
             mkb.Close();
@@ -113,7 +131,7 @@ namespace AutoMEK
             {
                 while (kslp.Read())
                 {
-                    mkslp.Add(Tuple.Create(kslp.GetInt32(0), kslp.GetDouble(1), kslp.GetDateTime(2),kslp.GetDateTime(3)));
+                    Mkslp.Add(Tuple.Create(kslp.GetInt32(0), kslp.GetDouble(1), kslp.GetDateTime(2),kslp.GetDateTime(3)));
                 }
             }
             kslp.Close();
@@ -125,16 +143,16 @@ namespace AutoMEK
                 while (kslp.Read())
                 {
                     
-                    mV024.Add(Tuple.Create(V024[0].ToString(), V024[1].ToString(), V024.GetDateTime(2), V024.GetDateTime(3)));
+                    MV024.Add(Tuple.Create(V024[0].ToString(), V024[1].ToString(), V024.GetDateTime(2), V024.GetDateTime(3)));
                 }
             }
 
 
-            if (!di_pack.Exists)
-            { di_pack.Create(); }
+            if (!Di_pack.Exists)
+            { Di_pack.Create(); }
 
-            if (!di_packed.Exists)
-            { di_packed.Create(); }
+            if (!Di_packed.Exists)
+            { Di_packed.Create(); }
 
         }
 
@@ -165,7 +183,7 @@ namespace AutoMEK
             ListBox listBox = (ListBox)olistBox;
             ThreadCount++;
             string Logg;
-            foreach (FileInfo findedFile in di_pack.GetFiles("L*.xml"))
+            foreach (FileInfo findedFile in Di_pack.GetFiles("L*.xml"))
             {
                 XDocument xDoc =  XDocument.Load(findedFile.FullName);
 
@@ -174,7 +192,13 @@ namespace AutoMEK
                 XElement xRoot = xDoc.Element("PERS_LIST");
 
               //  MessageBox.Show(xRoot.ToString());
-                   
+               foreach (XElement x_node_PERS in xRoot.Elements("PERS"))
+                {
+
+                }
+                
+
+
                foreach (XElement xnode_1 in xRoot.Elements("ZGLV"))
                 {
                     bool succ = false;
@@ -184,7 +208,7 @@ namespace AutoMEK
 
                     try   ///ищем HM файл.
                     {
-                        st = di_pack.GetFiles(FName1 + ".xml")[0];
+                        st = Di_pack.GetFiles(FName1 + ".xml")[0];
                         Logg =Logger ("Файл "+FName1+" со случаями для файла " + findedFile.Name + " найден!", listBox);
                         succ = true;
                     }
@@ -212,7 +236,7 @@ namespace AutoMEK
                                 DSCHET = DateTime.Now;
                             }
                             {
-                                if (mf003.FindIndex(s => s.Item1 == xnode_1_HM.Element("CODE_MO").Value && s.Item2 < DSCHET && s.Item3 > Convert.ToDateTime(xnode_1_HM.Element("DSCHET").Value)) < 1)
+                                if (Mf003.FindIndex(s => s.Item1 == xnode_1_HM.Element("CODE_MO").Value && s.Item2 < DSCHET && s.Item3 > Convert.ToDateTime(xnode_1_HM.Element("DSCHET").Value)) < 1)
                                         { 
                                             Logg = Logger("001F.00.0030  -  [CODE_MO] Организация " + xnode_1_HM.Element("CODE_MO").Value + " не найдена в справочнике F003  ", listBox);
                                         }
@@ -228,7 +252,7 @@ namespace AutoMEK
                             N_ZAP = 0;
                             if (xnode_1_HM_ZAP.Element("N_ZAP") != null)
                             {
-                                if (!Int32.TryParse(xnode_1_HM_ZAP.Element("N_ZAP").Value, out N_ZAP) | xnode_1_HM_ZAP.Element("N_ZAP").Value.Length > 9)
+                                if (!Int32.TryParse(xnode_1_HM_ZAP.Element("N_ZAP").Value, out n_ZAP) | xnode_1_HM_ZAP.Element("N_ZAP").Value.Length > 9)
                                 {
                                     Logg = Logger("004F.00.0190 - [N_ZAP] Поле N_ZAP  содержит недопустимое значение ["+ xnode_1_HM_ZAP.Element("N_ZAP").Value + "] в ZAP №  " + xnode_1_HM_ZAP_row + " строка (" + ((IXmlLineInfo)xnode_1_HM_ZAP).LineNumber + ")", listBox);
                                 }
@@ -246,7 +270,7 @@ namespace AutoMEK
                                 {
                                     DATE_2 = Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value);
                                     DATE_1 = Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_1").Value);
-                               if (mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS1").Value && s.Item2 >= DATE_2 ) < 1)
+                               if (Mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS1").Value && s.Item2 >= DATE_2 ) < 1)
                                {
                                         Logg = Logger("005F.00.0040  - N_ZAP " + N_ZAP +"  [DS1] Диагноз ["+ xnode_1_HM_SLUCH.Element("DS1").Value + "] не найден в справочнике MKB-10", listBox);
                                }
@@ -255,7 +279,7 @@ namespace AutoMEK
                                         if ((xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS2").Value))// || (xnode_1_HM_SLUCH.Element("DS3") != null) && (xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))
                                                                              Logg = Logger("006F.00.0430  - N_ZAP " + N_ZAP + " [DS1 -- DS2] Диагноз " + xnode_1_HM_SLUCH.Element("DS1").Value + " не должен равняться DS2", listBox);
 
-                                        if (mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS2").Value && s.Item2 >= DATE_2) < 1)
+                                        if (Mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS2").Value && s.Item2 >= DATE_2) < 1)
                                             Logg = Logger("005F.00.0050 - N_ZAP " + N_ZAP + " [DS2] Диагноз [" + xnode_1_HM_SLUCH.Element("DS2").Value + "] не найден в справочнике MKB-10", listBox);
 
                                         if ((xnode_1_HM_SLUCH.Element("DS3") != null) && (xnode_1_HM_SLUCH.Element("DS2").Value == xnode_1_HM_SLUCH.Element("DS3").Value))// ||  (xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))
@@ -272,11 +296,84 @@ namespace AutoMEK
                                         if ((xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))// || (xnode_1_HM_SLUCH.Element("DS3") != null) && (xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))
                                             Logg = Logger("006F.00.0430  - N_ZAP " + N_ZAP + " [DS1 -- DS3] Диагноз " + xnode_1_HM_SLUCH.Element("DS1").Value + " не должен равняться DS3", listBox);
 
-                                        if (mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS3").Value && s.Item2 >= DATE_2) < 1)
+                                        if (Mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS3").Value && s.Item2 >= DATE_2) < 1)
                                             Logg = Logger("005F.00.0060 - N_ZAP " + N_ZAP + " [DS3] Диагноз [" + xnode_1_HM_SLUCH.Element("DS3").Value + "] не найден в справочнике MKB-10", listBox);
 
                                        
                                     }
+
+
+                                    if (xnode_1_HM_SLUCH.Element("USL_OK") != null)
+                                    {
+                                        USL_OK = xnode_1_HM_SLUCH.Element("USL_OK").Value;
+
+                                    }
+                                    else
+                                    {
+                                        Logg = Logger("003F.00.2220  - N_ZAP " + N_ZAP + " [USL_OK] Является обязательным!", listBox);
+                                    }
+
+                                    if (xnode_1_HM_SLUCH.Element("FOR_POM") != null)
+                                    {
+                                        FOR_POM = xnode_1_HM_SLUCH.Element("FOR_POM").Value;
+
+                                        switch (USL_OK)
+                                        {
+                                            case "2":
+                                                if (!(FOR_POM=="2" || FOR_POM=="3"))
+                                                    Logg = Logger("006F.00.1280  - N_ZAP " + N_ZAP + " [FOR_POM] Для USL_OK=2 поле FOR_POM должно равняться 2 или 3! FOR_POM="+FOR_POM, listBox);
+                                                break;
+                                            case "3":
+                                                if (!(FOR_POM == "2" || FOR_POM == "3"))
+                                                    Logg = Logger("006F.00.1280  - N_ZAP " + N_ZAP + " [FOR_POM] Для USL_OK=3 поле FOR_POM должно равняться 2 или 3! FOR_POM=" + FOR_POM, listBox);
+                                              
+                                                break;
+                                            case "4":
+                                                if (!(FOR_POM == "2" || FOR_POM == "1"))
+                                                    Logg = Logger("006F.00.1280  - N_ZAP " + N_ZAP + " [FOR_POM] Для USL_OK=4 поле FOR_POM должно равняться 2 или 1! FOR_POM=" + FOR_POM, listBox);
+                                                break;
+
+                                        }
+                                        
+                                    }
+                                    else
+                                    {
+                                        Logg = Logger("003F.00.2240 - N_ZAP " + N_ZAP + " [FOR_POM] Является обязательным!", listBox);
+                                    }
+
+
+                                    if (xnode_1_HM_SLUCH.Element("NAPR") != null)
+                                    {
+                                        if (xnode_1_HM_SLUCH.Element("NAPR").Element("NPR_MO") != null)
+                                        {
+                                            if (xnode_1_HM_SLUCH.Element("NAPR").Element("NPR_DATE") != null)
+                                            {
+                                                
+                                            }
+                                            else
+                                            {
+                                                Logg = Logger("003F.00.0402  - N_ZAP " + N_ZAP + " [NPR_DATE] Поле должно присутствовать при наличии поля NPR_MO", listBox);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (xnode_1_HM_SLUCH.Element("NAPR").Element("NPR_DATE") != null)
+                                            {
+                                                Logg = Logger("003F.00.0401  - N_ZAP " + N_ZAP + " [NPR_MO] Поле должно присутствовать при наличии поля NPR_DATE", listBox);
+                                            }
+                                            else
+                                            {
+                                                
+                                            }
+                                        }
+
+                                    }
+
+
+
+
+
+
 
 
                                     if (xnode_1_HM_SLUCH.Element("KSG_KPG")!= null && xnode_1_HM_SLUCH.Element("KSG_KPG").Element("IT_SL") != null)
@@ -308,7 +405,7 @@ namespace AutoMEK
                                                 { Logg = Logger("004F.00.1180 - N_ZAP " + N_ZAP + " [SL_KOEF/IDSL] элемент должен соответствовать маске 9999", listBox); }
                                                 else {
 
-                                                    if (mkslp.FindIndex(s => s.Item1 == xx && s.Item3 < DATE_2 && s.Item4 >= DATE_2) < 1)
+                                                    if (Mkslp.FindIndex(s => s.Item1 == xx && s.Item3 < DATE_2 && s.Item4 >= DATE_2) < 1)
                                                     {
                                                         Logg = Logger("005F.00.0160 - N_ZAP " + N_ZAP + " [SL_KOEF/IDSL] КСЛП  [" + xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value + "] не найден в справочнике КСЛП", listBox);
                                                         
@@ -328,7 +425,7 @@ namespace AutoMEK
                                                         else
                                                         {
                                                            
-                                                            if (mkslp.FindIndex(s => s.Item1 == Convert.ToInt32(xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value) && s.Item2 == ikslp && s.Item3 < DATE_2 && s.Item4 >= DATE_2) < 1)
+                                                            if (Mkslp.FindIndex(s => s.Item1 == Convert.ToInt32(xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value) && s.Item2 == ikslp && s.Item3 < DATE_2 && s.Item4 >= DATE_2) < 1)
                                                             {
                                                                 
                                                                 Logg = Logger("004F.00.1190 - N_ZAP " + N_ZAP + " [SL_KOEF/Z_SL] КСЛП  номер [" + xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value +"--"+xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("Z_SL").Value + "] не найден в справочнике КСЛП", listBox);
@@ -411,7 +508,7 @@ namespace AutoMEK
                                                     }
                                                     else
                                                     {
-
+                                                        
                                                     }
                                                         
 
