@@ -32,6 +32,7 @@ namespace AutoMEK
         List<Tuple<string , DateTime , DateTime >> mf003;
          List<Tuple<int,double,DateTime , DateTime >> mkslp;
         private List<Tuple<string, string, DateTime, DateTime>> mV024;
+        private List<Tuple<string, string, DateTime, DateTime>> mV014;
         private List<Tuple<string, string, DateTime, DateTime>> mPERS;
         List<Tuple<string ,  DateTime >> mmkb;
         private int n_ZAP;
@@ -48,6 +49,7 @@ namespace AutoMEK
         public List<Tuple<string, DateTime, DateTime>> Mf003 { get => mf003; set => mf003 = value; }
         public List<Tuple<int, double, DateTime, DateTime>> Mkslp { get => mkslp; set => mkslp = value; }
         public List<Tuple<string, string, DateTime, DateTime>> MV024 { get => mV024; set => mV024 = value; }
+        public List<Tuple<string, string, DateTime, DateTime>> MV014 { get => mV014; set => mV014 = value; }
         public List<Tuple<string, string, DateTime, DateTime>> MPERS { get => mPERS; set => mPERS = value; }
         public List<Tuple<string, DateTime>> Mmkb { get => mmkb; set => mmkb = value; }
         public int N_ZAP { get => n_ZAP; set => n_ZAP = value; }
@@ -89,11 +91,13 @@ namespace AutoMEK
             string query_2= "select code,  coalesce(date_end,'2200-01-01') date_end from foms.mkb where deleted=false";
             string query_3= "select idsl,zkoef,datebeg,  coalesce(dateend,'2221-01-01') date_end from public.k_kslp";
             string query_4= "select iddkk,dkkname,datebeg,  coalesce(dateend,'2221-01-01') date_end from foms.v024";
+            string query_5= "select idfrmmp,frmmpname,datebeg,  coalesce(dateend,'2221-01-01') date_end from foms.v014";
             
             NpgsqlCommand cmd_1 = new NpgsqlCommand(query_1, npgSqlConnection_1);
             NpgsqlCommand cmd_2 = new NpgsqlCommand(query_2, npgSqlConnection_1);
             NpgsqlCommand cmd_3 = new NpgsqlCommand(query_3, npgSqlConnection_1);
             NpgsqlCommand cmd_4 = new NpgsqlCommand(query_4, npgSqlConnection_1);
+            NpgsqlCommand cmd_5 = new NpgsqlCommand(query_5, npgSqlConnection_1);
 
             NpgsqlDataReader f003 = cmd_1.ExecuteReader();
             
@@ -103,6 +107,7 @@ namespace AutoMEK
             Mkslp = new List<Tuple<int, double, DateTime, DateTime>>();
             Mmkb = new List<Tuple<string, DateTime>>();
             MV024 = new List<Tuple<string,string, DateTime, DateTime>>();
+            MV014 = new List<Tuple<string,string, DateTime, DateTime>>();
             
 
             if (f003.HasRows)
@@ -146,7 +151,18 @@ namespace AutoMEK
                     MV024.Add(Tuple.Create(V024[0].ToString(), V024[1].ToString(), V024.GetDateTime(2), V024.GetDateTime(3)));
                 }
             }
+            V024.Close();
 
+            NpgsqlDataReader V014 = cmd_5.ExecuteReader();
+            if (V014.HasRows)
+            {
+                while (kslp.Read())
+                {
+
+                    MV014.Add(Tuple.Create(V014[0].ToString(), V014[1].ToString(), V014.GetDateTime(2), V014.GetDateTime(3)));
+                }
+            }
+            V014.Close();
 
             if (!Di_pack.Exists)
             { Di_pack.Create(); }
@@ -236,7 +252,7 @@ namespace AutoMEK
                                 DSCHET = DateTime.Now;
                             }
                             {
-                                if (Mf003.FindIndex(s => s.Item1 == xnode_1_HM.Element("CODE_MO").Value && s.Item2 < DSCHET && s.Item3 > Convert.ToDateTime(xnode_1_HM.Element("DSCHET").Value)) < 1)
+                                if (Mf003.FindIndex(s => s.Item1 == xnode_1_HM.Element("CODE_MO").Value && s.Item2 < DSCHET && s.Item3 > Convert.ToDateTime(xnode_1_HM.Element("DSCHET").Value)) < 0)
                                         { 
                                             Logg = Logger("001F.00.0030  -  [CODE_MO] Организация " + xnode_1_HM.Element("CODE_MO").Value + " не найдена в справочнике F003  ", listBox);
                                         }
@@ -270,7 +286,7 @@ namespace AutoMEK
                                 {
                                     DATE_2 = Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value);
                                     DATE_1 = Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_1").Value);
-                               if (Mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS1").Value && s.Item2 >= DATE_2 ) < 1)
+                               if (Mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS1").Value && s.Item2 >= DATE_2 ) < 0)
                                {
                                         Logg = Logger("005F.00.0040  - N_ZAP " + N_ZAP +"  [DS1] Диагноз ["+ xnode_1_HM_SLUCH.Element("DS1").Value + "] не найден в справочнике MKB-10", listBox);
                                }
@@ -279,7 +295,7 @@ namespace AutoMEK
                                         if ((xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS2").Value))// || (xnode_1_HM_SLUCH.Element("DS3") != null) && (xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))
                                                                              Logg = Logger("006F.00.0430  - N_ZAP " + N_ZAP + " [DS1 -- DS2] Диагноз " + xnode_1_HM_SLUCH.Element("DS1").Value + " не должен равняться DS2", listBox);
 
-                                        if (Mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS2").Value && s.Item2 >= DATE_2) < 1)
+                                        if (Mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS2").Value && s.Item2 >= DATE_2) < 0)
                                             Logg = Logger("005F.00.0050 - N_ZAP " + N_ZAP + " [DS2] Диагноз [" + xnode_1_HM_SLUCH.Element("DS2").Value + "] не найден в справочнике MKB-10", listBox);
 
                                         if ((xnode_1_HM_SLUCH.Element("DS3") != null) && (xnode_1_HM_SLUCH.Element("DS2").Value == xnode_1_HM_SLUCH.Element("DS3").Value))// ||  (xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))
@@ -296,7 +312,7 @@ namespace AutoMEK
                                         if ((xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))// || (xnode_1_HM_SLUCH.Element("DS3") != null) && (xnode_1_HM_SLUCH.Element("DS1").Value == xnode_1_HM_SLUCH.Element("DS3").Value))
                                             Logg = Logger("006F.00.0430  - N_ZAP " + N_ZAP + " [DS1 -- DS3] Диагноз " + xnode_1_HM_SLUCH.Element("DS1").Value + " не должен равняться DS3", listBox);
 
-                                        if (Mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS3").Value && s.Item2 >= DATE_2) < 1)
+                                        if (Mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS3").Value && s.Item2 >= DATE_2) < 0)
                                             Logg = Logger("005F.00.0060 - N_ZAP " + N_ZAP + " [DS3] Диагноз [" + xnode_1_HM_SLUCH.Element("DS3").Value + "] не найден в справочнике MKB-10", listBox);
 
                                        
@@ -316,6 +332,12 @@ namespace AutoMEK
                                     if (xnode_1_HM_SLUCH.Element("FOR_POM") != null)
                                     {
                                         FOR_POM = xnode_1_HM_SLUCH.Element("FOR_POM").Value;
+
+                                        //MessageBox.Show(mV014[0].Item1+" "+mV014[0].Item3+" "+mV014[0].Item4+" " + FOR_POM + " "+ DATE_2);
+                                       // MessageBox.Show(mV014.FindIndex(s => s.Item1 == FOR_POM && s.Item3 < DATE_2 && s.Item4 >= DATE_2).ToString()+  FOR_POM + " "+ DATE_2);
+                                        if (mV014.FindIndex(s => s.Item1 == FOR_POM && s.Item3 < DATE_2 && s.Item4 >= DATE_2) < 0)
+                                            Logg = Logger("001F.00.0180  - N_ZAP " + N_ZAP + " [FOR_POM] Значение FOR_POM=" + FOR_POM+" не найдено в справочнике V014!", listBox);
+
 
                                         switch (USL_OK)
                                         {
@@ -405,7 +427,7 @@ namespace AutoMEK
                                                 { Logg = Logger("004F.00.1180 - N_ZAP " + N_ZAP + " [SL_KOEF/IDSL] элемент должен соответствовать маске 9999", listBox); }
                                                 else {
 
-                                                    if (Mkslp.FindIndex(s => s.Item1 == xx && s.Item3 < DATE_2 && s.Item4 >= DATE_2) < 1)
+                                                    if (Mkslp.FindIndex(s => s.Item1 == xx && s.Item3 < DATE_2 && s.Item4 >= DATE_2) < 0)
                                                     {
                                                         Logg = Logger("005F.00.0160 - N_ZAP " + N_ZAP + " [SL_KOEF/IDSL] КСЛП  [" + xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value + "] не найден в справочнике КСЛП", listBox);
                                                         
@@ -425,7 +447,7 @@ namespace AutoMEK
                                                         else
                                                         {
                                                            
-                                                            if (Mkslp.FindIndex(s => s.Item1 == Convert.ToInt32(xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value) && s.Item2 == ikslp && s.Item3 < DATE_2 && s.Item4 >= DATE_2) < 1)
+                                                            if (Mkslp.FindIndex(s => s.Item1 == Convert.ToInt32(xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value) && s.Item2 == ikslp && s.Item3 < DATE_2 && s.Item4 >= DATE_2) < 0)
                                                             {
                                                                 
                                                                 Logg = Logger("004F.00.1190 - N_ZAP " + N_ZAP + " [SL_KOEF/Z_SL] КСЛП  номер [" + xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("IDSL").Value +"--"+xnode_1_HM_SLUCH.Element("KSG_KPG").Element("SL_KOEF").Element("Z_SL").Value + "] не найден в справочнике КСЛП", listBox);
