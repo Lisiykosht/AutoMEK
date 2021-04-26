@@ -36,6 +36,8 @@ namespace AutoMEK
         private List<Tuple<string, string, DateTime, DateTime>> mPERS;
         List<Tuple<string ,  DateTime >> mmkb;
         private int n_ZAP;
+        private string ID_PAC;
+        private string W;
         private DateTime dATE_1;
         private DateTime dATE_2;
         private DateTime DR;
@@ -46,6 +48,7 @@ namespace AutoMEK
         public DirectoryInfo Di_packed { get => di_packed; set => di_packed = value; }
         public string FName { get => fName; set => fName = value; }
         public string FName1 { get => fName1; set => fName1 = value; }
+        
         public int ThreadCount { get => threadCount; set => threadCount = value; }
         public List<Tuple<string, DateTime, DateTime>> Mf003 { get => mf003; set => mf003 = value; }
         public List<Tuple<int, double, DateTime, DateTime>> Mkslp { get => mkslp; set => mkslp = value; }
@@ -56,6 +59,7 @@ namespace AutoMEK
         public int N_ZAP { get => n_ZAP; set => n_ZAP = value; }
         public DateTime DATE_1 { get => dATE_1; set => dATE_1 = value; }
         public DateTime DATE_2 { get => dATE_2; set => dATE_2 = value; }
+        
 
         public Form1()
         {
@@ -193,7 +197,18 @@ namespace AutoMEK
             
         }
 
-
+        private bool IsTrueText(string str)
+        {
+            char[] charStr = str.ToCharArray();
+            int[] masObr = new int[] { 44, 130, 46, 58, 185, 32, 160, 95, 45, 150, 151, 47, 92, 124, 166, 40, 91, 123, 41, 93, 125, 39, 34, 96, 145, 147, 146, 148, 60, 139, 171, 62, 155, 187, 132 };
+            bool flag = true;
+            for (int i = 0; i < charStr.Length; i++)
+            {
+                if (!Char.IsLetterOrDigit(charStr[i]) && !masObr.Contains((int)charStr[i]))
+                    return false;
+            }
+            return flag;
+        }
 
         public  void Goer(object olistBox)
         {
@@ -212,6 +227,48 @@ namespace AutoMEK
                foreach (XElement x_node_PERS in xRoot.Elements("PERS"))
                 {
 
+
+                    if (x_node_PERS.Element("ID_PAC") != null)
+                    {
+                        ID_PAC = x_node_PERS.Element("ID_PAC").Value;
+                        if (ID_PAC.Length<37)
+                        {
+                            if (!IsTrueText(ID_PAC)) 
+                                Logg = Logger("004F.00.1570  -  [PERS\\ID_PAC] Поле содержит недопустимые символы!", listBox); ;
+                            
+
+                        }
+                        else
+                        {
+                            Logg = Logger("004F.00.1570  -  [PERS\\ID_PAC] Допустимая длина поля 36 превышена (" + ID_PAC.Length + ")или !", listBox);
+                        }
+
+
+
+                    }
+                    else
+                    {
+                        Logg = Logger("003F.00.3080  -  [PERS\\ID_PAC] Поле является обязательным! Cтрока (" + ((IXmlLineInfo)x_node_PERS).LineNumber + ")", listBox);
+                    }
+                    if (x_node_PERS.Element("DR")!=null)
+                    {
+                        if (DateTime.TryParse(x_node_PERS.Element("DR").Value, out DateTime dR))
+                        { 
+                            
+                            DR = dR;
+                        }
+                        else
+                        {
+                            Logg = Logger("004F.00.1610  - N_ZAP " + N_ZAP + "[NPR_DATE] Указана некорректная дата! NPR_DATE принят как " + DATE_1 + "!", listBox);
+                        }
+
+
+
+                    }
+                    else
+                    {
+                        Logg = Logger("003F.00.3100  -  [PERS\\DR] Поле является обязательным!", listBox);
+                    }
                 }
                 
 
