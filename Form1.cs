@@ -41,6 +41,7 @@ namespace AutoMEK
         private DateTime dATE_1;
         private DateTime dATE_2;
         private DateTime DR;
+        private DateTime DR_P;
         private string USL_OK;
         private string FOR_POM;
 
@@ -113,6 +114,7 @@ namespace AutoMEK
             Mmkb = new List<Tuple<string, DateTime>>();
             MV024 = new List<Tuple<string,string, DateTime, DateTime>>();
             MV014 = new List<Tuple<string,string, DateTime, DateTime>>();
+            MPERS = new List<Tuple<string,string, DateTime, DateTime>>();
             
 
             if (f003.HasRows)
@@ -243,19 +245,29 @@ namespace AutoMEK
                             Logg = Logger("004F.00.1570  -  [PERS\\ID_PAC] Допустимая длина поля 36 превышена (" + ID_PAC.Length + ")или !", listBox);
                         }
 
-
-
-                    }
+                                            }
                     else
                     {
                         Logg = Logger("003F.00.3080  -  [PERS\\ID_PAC] Поле является обязательным! Cтрока (" + ((IXmlLineInfo)x_node_PERS).LineNumber + ")", listBox);
                     }
+
+
+
+
+
+
                     if (x_node_PERS.Element("DR")!=null)
                     {
                         if (DateTime.TryParse(x_node_PERS.Element("DR").Value, out DateTime dR))
                         { 
                             
                             DR = dR;
+                            if(DR>DATE_1)
+                                Logg = Logger("006F.00.0680  - ID_PAC " + ID_PAC + "[PERS\\DR] Дата рождения меньше даты начала случая  ДР:"+ DR +"--Д1:"+ DATE_1 + "!", listBox);
+
+
+
+
                         }
                         else
                         {
@@ -269,8 +281,24 @@ namespace AutoMEK
                     {
                         Logg = Logger("003F.00.3100  -  [PERS\\DR] Поле является обязательным!", listBox);
                     }
+
+                    if (x_node_PERS.Element("W") != null)
+                    {
+                        W = x_node_PERS.Element("W").Value;
+                    }
+                    else
+                    {
+                        Logg = Logger("003F.00.3090  -  [PERS\\W] Поле является обязательным!", listBox);
+                    }
+
+
+
+                    MPERS.Add(Tuple.Create(ID_PAC, W, DR, DR_P));
+                    
                 }
                 
+
+
 
 
                foreach (XElement xnode_1 in xRoot.Elements("ZGLV"))
