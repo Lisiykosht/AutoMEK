@@ -38,6 +38,7 @@ namespace AutoMEK
         private int n_ZAP;
         private DateTime dATE_1;
         private DateTime dATE_2;
+        private DateTime DR;
         private string USL_OK;
         private string FOR_POM;
 
@@ -363,31 +364,47 @@ namespace AutoMEK
                                         Logg = Logger("003F.00.2240 - N_ZAP " + N_ZAP + " [FOR_POM] Является обязательным!", listBox);
                                     }
 
-
-                                    if (xnode_1_HM_SLUCH.Element("NAPR") != null)
+                                    if (xnode_1_HM_SLUCH.Element("NPR_MO") != null)
                                     {
-                                        if (xnode_1_HM_SLUCH.Element("NAPR").Element("NPR_MO") != null)
+                                        if (xnode_1_HM_SLUCH.Element("NPR_DATE") != null)
                                         {
-                                            if (xnode_1_HM_SLUCH.Element("NAPR").Element("NPR_DATE") != null)
-                                            {
-                                                
-                                            }
-                                            else
-                                            {
-                                                Logg = Logger("003F.00.0402  - N_ZAP " + N_ZAP + " [NPR_DATE] Поле должно присутствовать при наличии поля NPR_MO", listBox);
-                                            }
+
                                         }
                                         else
                                         {
-                                            if (xnode_1_HM_SLUCH.Element("NAPR").Element("NPR_DATE") != null)
+                                            if (!DateTime.TryParse(xnode_1_HM_SLUCH.Element("NPR_DATE").Value, out DateTime NPR_DATE))
                                             {
-                                                Logg = Logger("003F.00.0401  - N_ZAP " + N_ZAP + " [NPR_MO] Поле должно присутствовать при наличии поля NPR_DATE", listBox);
+                                                Logg = Logger("004F.00.0540  - N_ZAP " + N_ZAP + "[NPR_DATE] Указана некорректная дата! NPR_DATE принят как " + DATE_1 + "!", listBox);
+
+                                                if (NPR_DATE>DATE_1)
+                                                    Logg = Logger("006F.00.0310  - N_ZAP " + N_ZAP + "[NPR_DATE]  NPR_DATE "+NPR_DATE+" больше даты на чала случая("+DATE_1+")!", listBox);
+
                                             }
-                                            else
-                                            {
-                                                
-                                            }
+                                            if ((USL_OK == "2" & FOR_POM == "3") | USL_OK == "2")
+                                                Logg = Logger("003F.00.0410  - N_ZAP " + N_ZAP + " [NPR_DATE] Поле должно присутствовать при (FOR_POM=3 и USL_OK=1) или USL_OK=2", listBox);
+
+                                            Logg = Logger("003F.00.0402  - N_ZAP " + N_ZAP + " [NPR_DATE] Поле должно присутствовать при наличии поля NPR_MO", listBox);
                                         }
+                                    }
+                                    else
+                                    {
+                                        if ((USL_OK=="2" & FOR_POM == "3") | USL_OK == "2")
+                                            Logg = Logger("003F.00.0400  - N_ZAP " + N_ZAP + " [NPR_MO] Поле должно присутствовать при (FOR_POM=3 и USL_OK=1) или USL_OK=2", listBox);
+                                        
+                                        if (xnode_1_HM_SLUCH.Element("NPR_DATE") != null)
+                                        {
+                                            Logg = Logger("003F.00.0401  - N_ZAP " + N_ZAP + " [NPR_MO] Поле должно присутствовать при наличии поля NPR_DATE", listBox);
+                                        }
+                                        else
+                                        {
+
+                                        }
+                                    }
+
+
+                                    if (xnode_1_HM_SLUCH.Element("NAPR") != null)
+                                    {
+                                        
 
                                     }
 
