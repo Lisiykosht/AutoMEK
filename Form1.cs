@@ -419,8 +419,10 @@ namespace AutoMEK
 
                                 DATE_2 = Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value);
                                 DATE_1 = Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_1").Value);
-                                if (MPERS[MPERS.FindIndex(s => s.Item1==)] > DATE_1)
-                                    Logg = Logger("006F.00.0680  - ID_PAC " + ID_PAC + "[PERS\\DR] Дата рождения меньше даты начала случая  ДР:" + DR + "--Д1:" + DATE_1 + "!", listBox);
+                                DR = MPERS[MPERS.FindIndex(s => s.Item1 == ID_PAC)].Item3;
+                               // MessageBox.Show(MPERS[MPERS.FindIndex(s => s.Item1 == ID_PAC)].Item3 + " xxx " + DATE_1);
+                                if (DR> DATE_1)
+                                    Logg = Logger("006F.00.0680  - ID_PAC " + ID_PAC + "[PERS\\DR] Дата рождения меньше даты начала случая  ДР: " + DR + "--Д1: " + DATE_1 + "!", listBox);
 
                                 if (xnode_1_HM_SLUCH.Element("DS1").Value != null)
                                 {
