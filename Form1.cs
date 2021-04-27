@@ -262,9 +262,7 @@ namespace AutoMEK
                         { 
                             
                             DR = dR;
-                            if(DR>DATE_1)
-                                Logg = Logger("006F.00.0680  - ID_PAC " + ID_PAC + "[PERS\\DR] Дата рождения меньше даты начала случая  ДР:"+ DR +"--Д1:"+ DATE_1 + "!", listBox);
-
+                            
 
 
 
@@ -366,13 +364,68 @@ namespace AutoMEK
                                 Logg = Logger("003F.00.2110 - [N_ZAP] Пропущено обязательное поле N_ZAP в ZAP № " + xnode_1_HM_ZAP_row +" строка ("+ ((IXmlLineInfo)xnode_1_HM_ZAP).LineNumber + ")", listBox);
                             };
 
+
+                            if (xnode_1_HM_ZAP.Element("PACIENT") != null)
+                            {
+                                if (xnode_1_HM_ZAP.Element("PACIENT").Element("ID_PAC") != null)
+                                {
+                                    
+                                    ID_PAC = xnode_1_HM_ZAP.Element("PACIENT").Element("ID_PAC").Value;
+                                    if (ID_PAC.Length < 37)
+                                    {
+                                        if (!IsTrueText(ID_PAC))
+                                            Logg = Logger("004F.00.0210  -  [PACIENT\\ID_PAC] Поле содержит недопустимые символы!", listBox); ;
+
+
+                                    }
+                                    else
+                                    {
+                                        Logg = Logger("004F.00.0210  -  [PACIENT\\ID_PAC] Допустимая длина поля 36 превышена (" + ID_PAC.Length + ") !", listBox);
+                                    }
+
+                                }
+                                else
+                                {
+                                    Logg = Logger("003F.00.2150  - N_ZAP " + N_ZAP + " [ID_PAC] Пропущено обязательный блок ID_PAC", listBox);
+                                }
+
+                                if (xnode_1_HM_ZAP.Element("PACIENT").Element("VPOLIS") == null)
+                                    Logg = Logger("003F.00.2160  - N_ZAP " + N_ZAP + " [VPOLIS] Пропущено обязательное поле VPOLIS", listBox); 
+                                
+                                if (xnode_1_HM_ZAP.Element("PACIENT").Element("NPOLIS") == null)
+                                    Logg = Logger("003F.00.2170  - N_ZAP " + N_ZAP + " [NPOLIS] Пропущено обязательное поле NPOLIS", listBox);
+
+                                if (xnode_1_HM_ZAP.Element("PACIENT").Element("NOVOR") != null) 
+                                {
+
+
+                                }
+                                else
+                                {
+                                    Logg = Logger("003F.00.2180  - N_ZAP " + N_ZAP + " [NOVOR] Пропущено обязательное поле NOVOR", listBox);
+                                }
+                            }
+                            else
+                            {
+                                Logg = Logger("003F.00.2130  - N_ZAP " + N_ZAP + " [PACIENT] Пропущено обязательное блок PACIENT", listBox);
+                            }
+
+
+
+
+
                             foreach (XElement xnode_1_HM_SLUCH in xnode_1_HM_ZAP.Elements("SLUCH"))
                             {
+
+                                DATE_2 = Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value);
+                                DATE_1 = Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_1").Value);
+                                if (MPERS[MPERS.FindIndex(s => s.Item1==)] > DATE_1)
+                                    Logg = Logger("006F.00.0680  - ID_PAC " + ID_PAC + "[PERS\\DR] Дата рождения меньше даты начала случая  ДР:" + DR + "--Д1:" + DATE_1 + "!", listBox);
+
                                 if (xnode_1_HM_SLUCH.Element("DS1").Value != null)
                                 {
-                                    DATE_2 = Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_2").Value);
-                                    DATE_1 = Convert.ToDateTime(xnode_1_HM_SLUCH.Element("DATE_1").Value);
-                               if (Mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS1").Value && s.Item2 >= DATE_2 ) < 0)
+                                  
+                                    if (Mmkb.FindIndex(s => s.Item1 == xnode_1_HM_SLUCH.Element("DS1").Value && s.Item2 >= DATE_2 ) < 0)
                                {
                                         Logg = Logger("005F.00.0040  - N_ZAP " + N_ZAP +"  [DS1] Диагноз ["+ xnode_1_HM_SLUCH.Element("DS1").Value + "] не найден в справочнике MKB-10", listBox);
                                }
@@ -419,8 +472,6 @@ namespace AutoMEK
                                     {
                                         FOR_POM = xnode_1_HM_SLUCH.Element("FOR_POM").Value;
 
-                                        //MessageBox.Show(mV014[0].Item1+" "+mV014[0].Item3+" "+mV014[0].Item4+" " + FOR_POM + " "+ DATE_2);
-                                       // MessageBox.Show(mV014.FindIndex(s => s.Item1 == FOR_POM && s.Item3 < DATE_2 && s.Item4 >= DATE_2).ToString()+  FOR_POM + " "+ DATE_2);
                                         if (mV014.FindIndex(s => s.Item1 == FOR_POM && s.Item3 < DATE_2 && s.Item4 >= DATE_2) < 0)
                                             Logg = Logger("001F.00.0180  - N_ZAP " + N_ZAP + " [FOR_POM] Значение FOR_POM=" + FOR_POM+" не найдено в справочнике V014!", listBox);
 
@@ -453,7 +504,8 @@ namespace AutoMEK
                                     {
                                         if (xnode_1_HM_SLUCH.Element("NPR_DATE") != null)
                                         {
-
+                                            if (Convert.ToDateTime( xnode_1_HM_SLUCH.Element("NPR_DATE").Value)<DR)
+                                                Logg = Logger("006F.00.0311  - N_ZAP " + N_ZAP + " [NPR_DATE] Значение поля NPR_DATE "+ Convert.ToDateTime(xnode_1_HM_SLUCH.Element("NPR_DATE").Value) + "не должно быть меньше DR" + DR, listBox);
                                         }
                                         else
                                         {
