@@ -543,8 +543,31 @@ namespace AutoMEK
 
                                     if (xnode_1_HM_SLUCH.Element("NAPR") != null)
                                     {
-                                        
+                                        if (xnode_1_HM_SLUCH.Element("NAPR").Element("NAPR_DATE") == null)
+                                            Logg = Logger("003F.00.2990  - N_ZAP " + N_ZAP + " [NAPR_DATE] Поле должно присутствовать при наличии блока NAPR", listBox);
 
+                                        if (xnode_1_HM_SLUCH.Element("NAPR").Element("NAPR_V") == null)
+                                        { Logg = Logger("003F.00.3000  - N_ZAP " + N_ZAP + " [NAPR_V] Поле должно присутствовать при наличии блока NAPR", listBox); }
+                                        else
+                                        {
+                                            if (xnode_1_HM_SLUCH.Element("NAPR").Element("NAPR_V").Value=="3"&& xnode_1_HM_SLUCH.Element("NAPR").Element("MET_ISSL") == null)
+                                                Logg = Logger("003F.00.1190  - N_ZAP " + N_ZAP + " [MET_ISSL] Поле должно присутствовать при NAPR_V=3 ", listBox);
+                                            
+                                            if (xnode_1_HM_SLUCH.Element("NAPR").Element("NAPR_V").Value=="3"&& xnode_1_HM_SLUCH.Element("NAPR").Element("MET_ISSL") == null)
+                                                Logg = Logger("003F.00.1200  - N_ZAP " + N_ZAP + " [MET_ISSL] Поле должно отсутствовать при NAPR_V<>3 ", listBox);
+
+                                        }
+
+                                        if (xnode_1_HM_SLUCH.Element("NAPR").Element("NAPR_USL") == null)
+                                        {
+                                            if (xnode_1_HM_SLUCH.Element("NAPR").Element("MET_ISSL") == null)
+                                                Logg = Logger("003F.00.1220  - N_ZAP " + N_ZAP + " [NAPR_USL] Поле должно отсутствовать при отутствии поля MET_ISSL", listBox);
+                                        }
+                                        else
+                                        {
+                                            if (xnode_1_HM_SLUCH.Element("NAPR").Element("MET_ISSL") != null)
+                                                Logg = Logger("003F.00.1210  - N_ZAP " + N_ZAP + " [NAPR_USL] Поле должно присутствовать при наличии поля MET_ISSL", listBox);
+                                        }
                                     }
 
 
