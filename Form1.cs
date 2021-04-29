@@ -560,13 +560,13 @@ namespace AutoMEK
 
                                         if (xnode_1_HM_SLUCH.Element("NAPR").Element("NAPR_USL") == null)
                                         {
-                                            if (xnode_1_HM_SLUCH.Element("NAPR").Element("MET_ISSL") == null)
-                                                Logg = Logger("003F.00.1220  - N_ZAP " + N_ZAP + " [NAPR_USL] Поле должно отсутствовать при отутствии поля MET_ISSL", listBox);
+                                            if (xnode_1_HM_SLUCH.Element("NAPR").Element("MET_ISSL") != null)
+                                                Logg = Logger("003F.00.1210  - N_ZAP " + N_ZAP + " [NAPR_USL] Поле должно присутствовать при наличии поля MET_ISSL", listBox); 
                                         }
                                         else
                                         {
-                                            if (xnode_1_HM_SLUCH.Element("NAPR").Element("MET_ISSL") != null)
-                                                Logg = Logger("003F.00.1210  - N_ZAP " + N_ZAP + " [NAPR_USL] Поле должно присутствовать при наличии поля MET_ISSL", listBox);
+                                            if (xnode_1_HM_SLUCH.Element("NAPR").Element("MET_ISSL") == null)
+                                                Logg = Logger("003F.00.1220  - N_ZAP " + N_ZAP + " [NAPR_USL] Поле должно отсутствовать при отутствии поля MET_ISSL", listBox);
                                         }
                                     }
 
