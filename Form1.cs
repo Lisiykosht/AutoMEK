@@ -544,7 +544,22 @@ namespace AutoMEK
                                     if (xnode_1_HM_SLUCH.Element("NAPR") != null)
                                     {
                                         if (xnode_1_HM_SLUCH.Element("NAPR").Element("NAPR_DATE") == null)
-                                            Logg = Logger("003F.00.2990  - N_ZAP " + N_ZAP + " [NAPR_DATE] Поле должно присутствовать при наличии блока NAPR", listBox);
+                                        { Logg = Logger("003F.00.2990  - N_ZAP " + N_ZAP + " [NAPR_DATE] Поле должно присутствовать при наличии блока NAPR", listBox); }
+                                        else
+                                        {
+                                            if (DateTime.TryParse(xnode_1_HM_SLUCH.Element("NAPR").Element("NAPR_DATE").Value, out DateTime NAPR_DATE))
+                                            { 
+                                                if (NAPR_DATE>DATE_2)
+                                                    Logg = Logger("006F.00.0580 - N_ZAP " + N_ZAP + " [NAPR_DATE] Значение поля не должно быть больше DATE_2", listBox);
+
+                                                if (NAPR_DATE<DATE_1)
+                                                    Logg = Logger("006F.00.0590 - N_ZAP " + N_ZAP + " [NAPR_DATE] Значение поля не должно быть меньше DATE_1", listBox);
+                                            }
+                                            else 
+                                            { 
+                                                Logg = Logger("004F.00.1550 - N_ZAP " + N_ZAP + " [NAPR_DATE] элемент должен быть датой", listBox); 
+                                            }
+                                        }
 
                                         if (xnode_1_HM_SLUCH.Element("NAPR").Element("NAPR_V") == null)
                                         { Logg = Logger("003F.00.3000  - N_ZAP " + N_ZAP + " [NAPR_V] Поле должно присутствовать при наличии блока NAPR", listBox); }
