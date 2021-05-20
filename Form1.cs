@@ -304,7 +304,11 @@ namespace AutoMEK
                     bool succ = false;
                     FileInfo st=null;
                     FName1 = xnode_1.Element("FILENAME1").Value;
+                    if (xnode_1.Element("VERSION").Value != "3.1") 
+                        Logg = Logger("002F.00.0010  -  [VERSION] Версия файла отличается от 3.1!", listBox);
 
+                    if ((Convert.ToInt32( xnode_1.Element("MONTH").Value) > 12 )| (Convert.ToInt32(xnode_1.Element("MONTH").Value) < 1))
+                        Logg = Logger("002F.00.0070  -  [MONTH] Поле содержит недопустимое значение!", listBox);
 
                     try   ///ищем HM файл.
                     {
@@ -470,6 +474,7 @@ namespace AutoMEK
                                         Logg = Logger("003F.00.2220  - N_ZAP " + N_ZAP + " [USL_OK] Является обязательным!", listBox);
                                     }
 
+
                                     if (xnode_1_HM_SLUCH.Element("FOR_POM") != null)
                                     {
                                         FOR_POM = xnode_1_HM_SLUCH.Element("FOR_POM").Value;
@@ -539,6 +544,9 @@ namespace AutoMEK
 
                                         }
                                     }
+
+                                    
+
 
 
                                     if (xnode_1_HM_SLUCH.Element("NAPR") != null)
