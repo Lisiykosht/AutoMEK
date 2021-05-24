@@ -44,6 +44,7 @@ namespace AutoMEK
         private DateTime DR_P;
         private string USL_OK;
         private string FOR_POM;
+        private int RSLT;
 
         public DirectoryInfo Di_pack { get => di_pack; set => di_pack = value; }
         public DirectoryInfo Di_packed { get => di_packed; set => di_packed = value; }
@@ -307,8 +308,7 @@ namespace AutoMEK
                     if (xnode_1.Element("VERSION").Value != "3.1") 
                         Logg = Logger("002F.00.0010  -  [VERSION] Версия файла отличается от 3.1!", listBox);
 
-                    if ((Convert.ToInt32( xnode_1.Element("MONTH").Value) > 12 )| (Convert.ToInt32(xnode_1.Element("MONTH").Value) < 1))
-                        Logg = Logger("002F.00.0070  -  [MONTH] Поле содержит недопустимое значение!", listBox);
+                    
 
                     try   ///ищем HM файл.
                     {
@@ -325,8 +325,10 @@ namespace AutoMEK
                     {
                         XDocument xDoc_HM =  XDocument.Load(st.FullName, LoadOptions.SetLineInfo);
                         XElement xRoot_HM = xDoc_HM.Element("ZL_LIST");
-                      
                         
+                        //if ((Convert.ToInt32(xnode_1.Element("MONTH").Value) > 12) | (Convert.ToInt32(xnode_1.Element("MONTH").Value) < 1))
+                          //  Logg = Logger("002F.00.0070  -  [MONTH] Поле содержит недопустимое значение!", listBox);
+
                         foreach (XElement xnode_1_HM in xRoot_HM.Elements("SCHET"))
                         {
                             if (!DateTime.TryParse(xnode_1_HM.Element("DSCHET").Value, out DateTime DSCHET))
@@ -474,7 +476,15 @@ namespace AutoMEK
                                         Logg = Logger("003F.00.2220  - N_ZAP " + N_ZAP + " [USL_OK] Является обязательным!", listBox);
                                     }
 
-
+                                    if (xnode_1_HM_SLUCH.Element("RSLT") != null)
+                                    {
+                                        RSLT = Convert.ToInt32(xnode_1_HM_SLUCH.Element("RSLT").Value);
+                                    }
+                                    else
+                                    {
+                                        Logg = Logger("003F.00.2280  - N_ZAP " + N_ZAP + " [RSLT] Поле RSLT является обязательным!", listBox);
+                                    }
+                                    ;
                                     if (xnode_1_HM_SLUCH.Element("FOR_POM") != null)
                                     {
                                         FOR_POM = xnode_1_HM_SLUCH.Element("FOR_POM").Value;
@@ -482,21 +492,35 @@ namespace AutoMEK
                                         if (mV014.FindIndex(s => s.Item1 == FOR_POM && s.Item3 < DATE_2 && s.Item4 >= DATE_2) < 0)
                                             Logg = Logger("001F.00.0180  - N_ZAP " + N_ZAP + " [FOR_POM] Значение FOR_POM=" + FOR_POM+" не найдено в справочнике V014!", listBox);
 
+                                        
 
                                         switch (USL_OK)
                                         {
+                                            case "1":
+                                                if (!(RSLT>100 & RSLT<200))
+                                                    Logg = Logger("006F.00.1310  - N_ZAP " + N_ZAP + " [RSLT] Для USL_OK=1 поле RSLT должно находиться в диапазоне 100<RSLT<200! RSLT =" + RSLT, listBox);
+
+                                                break;
+
                                             case "2":
                                                 if (!(FOR_POM=="2" || FOR_POM=="3"))
                                                     Logg = Logger("006F.00.1280  - N_ZAP " + N_ZAP + " [FOR_POM] Для USL_OK=2 поле FOR_POM должно равняться 2 или 3! FOR_POM="+FOR_POM, listBox);
+                                                if (!(RSLT > 200 & RSLT < 300))
+                                                    Logg = Logger("006F.00.1320  - N_ZAP " + N_ZAP + " [RSLT] Для USL_OK=2 поле RSLT должно находиться в диапазоне 200<RSLT<300! RSLT =" + RSLT, listBox);
                                                 break;
+
                                             case "3":
                                                 if (!(FOR_POM == "2" || FOR_POM == "3"))
                                                     Logg = Logger("006F.00.1280  - N_ZAP " + N_ZAP + " [FOR_POM] Для USL_OK=3 поле FOR_POM должно равняться 2 или 3! FOR_POM=" + FOR_POM, listBox);
-                                              
+                                                if (!(RSLT > 300 & RSLT < 400))
+                                                    Logg = Logger("006F.00.1330  - N_ZAP " + N_ZAP + " [RSLT] Для USL_OK=3 поле RSLT должно находиться в диапазоне 300<RSLT<400! RSLT =" + RSLT, listBox);
                                                 break;
+
                                             case "4":
                                                 if (!(FOR_POM == "2" || FOR_POM == "1"))
                                                     Logg = Logger("006F.00.1280  - N_ZAP " + N_ZAP + " [FOR_POM] Для USL_OK=4 поле FOR_POM должно равняться 2 или 1! FOR_POM=" + FOR_POM, listBox);
+                                                if (!(RSLT > 400 & RSLT < 500))
+                                                    Logg = Logger("006F.00.1340  - N_ZAP " + N_ZAP + " [RSLT] Для USL_OK=4 поле RSLT должно находиться в диапазоне 400<RSLT<500! RSLT =" + RSLT, listBox);
                                                 break;
 
                                         }
