@@ -305,8 +305,8 @@ namespace AutoMEK
                     bool succ = false;
                     FileInfo st=null;
                     FName1 = xnode_1.Element("FILENAME1").Value;
-                    if (xnode_1.Element("VERSION").Value != "3.1") 
-                        Logg = Logger("002F.00.0010  -  [VERSION] Версия файла отличается от 3.1!", listBox);
+                    if (xnode_1.Element("VERSION").Value != "3.2") 
+                        Logg = Logger("002F.00.0050  -  [VERSION] Версия L-файла отличается от 3.2!", listBox);
 
                     
 
@@ -324,10 +324,21 @@ namespace AutoMEK
                     if (succ)  //Загружаем XML если нашли НМ файл
                     {
                         XDocument xDoc_HM =  XDocument.Load(st.FullName, LoadOptions.SetLineInfo);
-                        XElement xRoot_HM = xDoc_HM.Element("ZL_LIST");
+
+
                         
-                        //if ((Convert.ToInt32(xnode_1.Element("MONTH").Value) > 12) | (Convert.ToInt32(xnode_1.Element("MONTH").Value) < 1))
-                          //  Logg = Logger("002F.00.0070  -  [MONTH] Поле содержит недопустимое значение!", listBox);
+
+                            XElement xRoot_HM = xDoc_HM.Element("ZL_LIST");
+                            XElement xZGLV_HM = xRoot_HM.Element("ZGLV");
+                            XElement xSCHET_HM = xRoot_HM.Element("SCHET");
+
+                        
+                        if ((Convert.ToInt32(xSCHET_HM.Element("MONTH").Value) > 12) | (Convert.ToInt32(xSCHET_HM.Element("MONTH").Value) < 1))
+                            Logg = Logger("002F.00.0070  -  [MONTH] Поле содержит недопустимое значение!", listBox);
+
+                        if (xSCHET_HM.Element("VERSION").Value != "3.1")
+                            Logg = Logger("002F.00.0010  -  [VERSION] Версия H-файла отличается от 3.1!", listBox);
+
 
                         foreach (XElement xnode_1_HM in xRoot_HM.Elements("SCHET"))
                         {
